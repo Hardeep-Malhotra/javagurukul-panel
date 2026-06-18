@@ -1,0 +1,5 @@
+# Heaviest folder 
+node_modules/
+
+# Secret file
+.env
