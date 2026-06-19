@@ -2,19 +2,20 @@ const User = require("../models/User");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
+// Login Route
 exports.adminLogin = async (req, res) => {
-  const { email, password } = req.body;
-
-  // Safety Check: Agar Postman se email ya password bheja hi nahi
-  if (!email || !password) {
-    return res.status(400).json({
-      success: false,
-      message: "Please provide both email and password",
-    });
-  }
-
   try {
-    // 1. Check if user exists (.select("+password") safety ke liye lagaya hai)
+    const { email, password } = req.body;
+
+    // Safety Check: is email and password not given by postman
+    if (!email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide both email and password",
+      });
+    }
+
+    // 1. Check if user exists
     const user = await User.findOne({ email }).select("+password");
 
     if (!user) {
@@ -24,7 +25,7 @@ exports.adminLogin = async (req, res) => {
       });
     }
 
-    // Safety Check: Agar DB me user to hai par uska password field hi nahi hai
+    // Safety Check:  if in DB user exits but no password
     if (!user.password) {
       return res.status(500).json({
         success: false,
@@ -64,6 +65,13 @@ exports.adminLogin = async (req, res) => {
       },
     );
 
+    // TOKEN -> COOKIES
+    res.cookie("adminToken", token, {
+      httpsOnly: true,
+      secure: false, // In Development (localhost) on false and  when go for Production set true
+      sameSite: "lax", // Protect CSRF (Cross-Site Request Forgery) Attack
+    });
+
     return res.status(200).json({
       success: true,
       message: "Login successful!",
@@ -83,6 +91,8 @@ exports.adminLogin = async (req, res) => {
     });
   }
 };
+
+// Temp Register Routes
 exports.tempRegister = async (req, res) => {
   try {
     const { email, password, role } = req.body;

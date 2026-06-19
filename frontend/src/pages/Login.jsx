@@ -4,6 +4,9 @@ import { UserOutlined, LockOutlined } from "@ant-design/icons";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
+// Global configuration : give order to the browser for carry cookies in every request
+axios.defaults.withCredentials = true;
+
 const Login = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -21,7 +24,6 @@ const Login = () => {
 
       if (response.data.success) {
         message.success("Login Successful! ");
-        localStorage.setItem("adminToken", response.data.token);
         localStorage.setItem("adminUser", JSON.stringify(response.data.user));
         navigate("/dashboard");
       }
