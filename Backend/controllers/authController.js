@@ -1,8 +1,12 @@
 const User = require("../models/User");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const sendEmail = require("../utils/sendEmail");
 
-// Login Route
+// Temporary Memory Store (When server is runing , OTP save here)
+let temporaryOTPStore = {};
+
+// ===== MODULE 1: LOGIN CHECK & SEND OTP =====
 exports.adminLogin = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -53,34 +57,38 @@ exports.adminLogin = async (req, res) => {
       });
     }
 
-    // 4. Generate JWT Token
-    const token = jwt.sign(
-      {
-        id: user._id,
-        role: user.role,
-      },
-      process.env.JWT_SECRET,
-      {
-        expiresIn: "1d",
-      },
-    );
+    // 4. Generate 6 Digit Random OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
-    // TOKEN -> COOKIES
-    res.cookie("adminToken", token, {
-      httpsOnly: true,
-      secure: false, // In Development (localhost) on false and  when go for Production set true
-      sameSite: "lax", // Protect CSRF (Cross-Site Request Forgery) Attack
+    // 5. Save OTP Data in Temporary File for 5mints
+    temporaryOTPStore[email] = {
+      otp: otp,
+      userId: user._id,
+      role: user.role,
+      expiresAt: Date.now() + 5 * 60 * 1000,
+    };
+
+    // 6. Reusable global mail helper called here
+    const emailResult = await sendEmail({
+      to: user.email,
+      subject: "JavaGurukul Security System - Login OTP Verification",
+      text: `Hello Admin, your 6-digit secure OTP for Dashboard Login is : ${otp}.\n This OTP is confidential and valid for 5 minutes only.`,
     });
+
+    // 7. if email delivery fail
+    if (!emailResult.success) {
+      return res.status(500).json({
+        success: false,
+        message: "Failed to send verification email. Please try again.",
+      });
+    }
+
+    // 8. Generate JWT Token
 
     return res.status(200).json({
       success: true,
-      message: "Login successful!",
-      token,
-      user: {
-        id: user._id,
-        email: user.email,
-        role: user.role,
-      },
+      message: "Security OTP successfully sent to your registered email!",
+      showOTPField: true,
     });
   } catch (error) {
     console.error("❌ LOGIN ERROR:", error); // Taaki terminal me dikhe
@@ -92,7 +100,80 @@ exports.adminLogin = async (req, res) => {
   }
 };
 
-// Temp Register Routes
+// ===== MODULE 2: VERIFY OTP & GRANT ACCESS =====
+exports.verifyOTP = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+
+    // step 1 : email session in memory store
+    const storedData = temporaryOTPStore[email];
+
+    if (!storedData) {
+      return res.status(400).json({
+        success: false,
+        message: "OTP session not found or expired. Please login again!",
+      });
+    }
+
+    // step 2: Check session expiry
+
+    if (storedData.expiresAt < Date.now()) {
+      delete temporaryOTPStore[email];
+      return res.status(400).json({
+        success: false,
+        message: "OTP has expired! Please request a new one.",
+      });
+    }
+
+    // step 3 : Check OTP Match
+    if (!storedData.otp !== otp) {
+      return res.status(400).json({
+        success: false,
+        message: "Incorrect OTP! Authentication failed.",
+      });
+    }
+
+    // step 4 : if OTP success , Then clear the memory
+    delete temporaryOTPStore[email];
+
+    // step 8: Generate JWT TOken
+    const token = jwt.sign(
+      {
+        id: storedData.userId,
+        role: storedData.role,
+      },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "1d",
+      },
+    );
+
+    res.cookie("adminToken", token, {
+      httpOnly: true,
+      secure: false,
+      sameSite: "lax",
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "OTP Verified! Login Successfully.",
+      user: {
+        id: storedData.userId,
+        email: storedData.email,
+        role: storedData.role,
+      },
+    });
+  } catch (error) {
+    console.error("❌ OTP VERIFICATION ERROR:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server Error",
+      error: error.message,
+    });
+  }
+};
+
+// ===== MODULE 3: Temp Register =====
 exports.tempRegister = async (req, res) => {
   try {
     const { email, password, role } = req.body;
