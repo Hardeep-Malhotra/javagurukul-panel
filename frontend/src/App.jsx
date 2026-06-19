@@ -7,9 +7,9 @@ import {
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 
-// Secure Routing For Checking token exist or Not
+//  Secure Routing For Checking if admin session exists in LocalStorage
 const ProtectedRoute = ({ children }) => {
-  const token = localStorage.getItem("adminToken");
+  const token = localStorage.getItem("adminUser");
   // if token is not then redirect on /login
   return token ? children : <Navigate to="/" />;
 };
