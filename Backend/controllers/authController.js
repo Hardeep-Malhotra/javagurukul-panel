@@ -83,8 +83,6 @@ exports.adminLogin = async (req, res) => {
       });
     }
 
-    // 8. Generate JWT Token
-
     return res.status(200).json({
       success: true,
       message: "Security OTP successfully sent to your registered email!",
