@@ -126,7 +126,7 @@ exports.verifyOTP = async (req, res) => {
     }
 
     // step 3 : Check OTP Match
-    if (!storedData.otp !== otp) {
+    if (storedData.otp !== otp) {
       return res.status(400).json({
         success: false,
         message: "Incorrect OTP! Authentication failed.",
@@ -159,7 +159,7 @@ exports.verifyOTP = async (req, res) => {
       message: "OTP Verified! Login Successfully.",
       user: {
         id: storedData.userId,
-        email: storedData.email,
+        email: email,
         role: storedData.role,
       },
     });
