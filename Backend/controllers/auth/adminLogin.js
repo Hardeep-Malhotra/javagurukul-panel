@@ -1,5 +1,6 @@
 const User = require("../../models/User");
 const sendEmail = require("../../utils/sendEmail");
+const bcrypt = require("bcryptjs");
 const { temporaryOTPStore } = require("./otpStore");
 
 const adminLogin = async (req, res) => {

@@ -1,8 +1,8 @@
 require("dotenv").config();
 const express = require("express");
-const cors = require("cors"); // Import pehle se hai, sahi hai
+const cors = require("cors");
 const cookieParser = require("cookie-parser");
-const authRoutes = require("./routes/authRoutes");
+const globalRouter = require("./routes/index");
 const connectDB = require("./config/db");
 
 // Connect DataBase
@@ -10,7 +10,7 @@ connectDB();
 
 const app = express();
 
-// ✅ FIXED: Middlewares ke andar CORS daalna compulsory hai taaki frontend hit kar sake
+// Middlewares
 app.use(express.json());
 app.use(cookieParser());
 app.use(
@@ -22,8 +22,8 @@ app.use(
   }),
 );
 
-// Main Base Routes
-app.use("/api/auth", authRoutes);
+// ✅ Main Base Routes (Sir ka gate system)
+app.use("/api", globalRouter);
 
 const PORT = process.env.PORT || 5000;
 
