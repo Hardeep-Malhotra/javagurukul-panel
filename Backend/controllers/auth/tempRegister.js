@@ -1,9 +1,8 @@
 const User = require("../../models/User");
 const bcrypt = require("bcryptjs");
-const { tempRegister } = require("../authController");
 
 // ===== MODULE 3: Temp Register =====
-exports.tempRegister = async (req, res) => {
+const tempRegister = async (req, res) => {
   try {
     const { email, password, role } = req.body;
     console.log("Incoming Data:", req.body); // Ye check karne ke liye ki data aa raha hai ya nahi

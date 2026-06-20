@@ -1,9 +1,8 @@
 const jwt = require("jsonwebtoken");
 const { temporaryOTPStore } = require("./otpStore");
-const { verifyOTP } = require("../authController");
 
 // ===== MODULE 2: VERIFY OTP & GRANT ACCESS =====
-exports.verifyOTP = async (req, res) => {
+const verifyOTP = async (req, res) => {
   try {
     const { email, otp } = req.body;
 
