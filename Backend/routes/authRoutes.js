@@ -1,15 +1,14 @@
 const express = require("express");
 const router = express.Router();
-const {
-  adminLogin,
-  tempRegister,
-  verifyOTP,
-} = require("../controllers/authController");
 
-// Router mapped to controllers
+// Import individuals function from each file
+const adminLogin = require("../controllers/auth/adminLogin");
+const verifyOTP = require("../controllers/auth/verifyOTP");
+const tempRegister = require("../controllers/auth/tempRegister");
 
+// Endpoints Mapping
 router.post("/admin-login", adminLogin);
-router.post("/temp-register", tempRegister);
 router.post("/verify-otp", verifyOTP);
+router.post("/temp-register", tempRegister);
 
 module.exports = router;
