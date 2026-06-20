@@ -5,7 +5,7 @@ const bcrypt = require("bcryptjs");
 const tempRegister = async (req, res) => {
   try {
     const { email, password, role } = req.body;
-    console.log("Incoming Data:", req.body); // Ye check karne ke liye ki data aa raha hai ya nahi
+    console.log("Incoming Data:", req.body);
 
     let userExists = await User.findOne({ email });
     if (userExists) {

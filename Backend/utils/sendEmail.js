@@ -14,10 +14,11 @@ const transporter = nodemailer.createTransport({
 const sendEmail = async ({ to, subject, text }) => {
   try {
     const mailOptions = {
-      from: `JavaGurukul Core System <hardeepmalhotra022@gmail.com>`,
+      from: `JavaGurukul Core System <${process.env.EMAIL_USER}>`,
       to,
       subject,
       text,
+      html,
     };
 
     // send mail
