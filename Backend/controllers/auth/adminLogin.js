@@ -1,9 +1,8 @@
 const User = require("../../models/User");
 const sendEmail = require("../../utils/sendEmail");
-const { adminLogin } = require("../authController");
 const { temporaryOTPStore } = require("./otpStore");
 
-exports.adminLogin = async (req, res) => {
+const adminLogin = async (req, res) => {
   try {
     const { email, password } = req.body;
 
