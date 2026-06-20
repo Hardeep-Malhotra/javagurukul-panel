@@ -1,9 +1,13 @@
 const jwt = require("jsonwebtoken");
 const { temporaryOTPStore } = require("./otpStore");
+const verifyOTPSchema = require("../../validators/verifyOTPValidator");
 
 // ===== MODULE 2: VERIFY OTP & GRANT ACCESS =====
 const verifyOTP = async (req, res) => {
   try {
+    // ValidateAsync on OTP data
+    await verifyOTPSchema.validateAsync(req.body, { abortEarly: false });
+
     const { email, otp } = req.body;
 
     // step 1 : email session in memory store
@@ -65,6 +69,12 @@ const verifyOTP = async (req, res) => {
       },
     });
   } catch (error) {
+    // If OTP Validation is failed then run this statement
+    if (error.isJoi) {
+      const errorMessages = error.details.map((detail) => detail.message);
+      return res.status(400).json({ success: false, errors: errorMessages });
+    }
+
     console.error("❌ OTP VERIFICATION ERROR:", error);
     return res.status(500).json({
       success: false,

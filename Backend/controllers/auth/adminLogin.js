@@ -2,9 +2,11 @@ const User = require("../../models/User");
 const sendEmail = require("../../utils/sendEmail");
 const bcrypt = require("bcryptjs");
 const { temporaryOTPStore } = require("./otpStore");
+const loginSchema = require("../../validators/loginValidator");
 
 const adminLogin = async (req, res) => {
   try {
+    await loginSchema.validateAsync(req.body, { abortEarly: false });
     const { email, password } = req.body;
 
     // Safety Check: is email and password not given by postman
@@ -85,7 +87,13 @@ const adminLogin = async (req, res) => {
       showOTPField: true,
     });
   } catch (error) {
-    console.error("❌ LOGIN ERROR:", error); // Taaki terminal me dikhe
+    // if Joi validation is failed this block is run
+    if (error.isJoi && error.details) {
+      const errorMessages = error.details.map((detail) => detail.message);
+
+      return res.status(400).json({ success: false, errors: errorMessages });
+    }
+    console.error("❌ LOGIN ERROR:", error);
     return res.status(500).json({
       success: false,
       message: "Server Error",
