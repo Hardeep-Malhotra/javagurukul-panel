@@ -22,8 +22,28 @@ app.use(
   }),
 );
 
-// ✅ Main Base Routes (Sir ka gate system)
+// ✅ Main Base Routes
 app.use(globalRouter);
+
+//Central Global Error Handling Middleware
+
+app.use((err, req, res, next) => {
+  // 1. if any  Joi Validation Error occur
+  if (err.isJoi && err.details) {
+    const errorMessages = err.details.map((detail) => detail.message);
+    return res.status(400).json({
+      success: false,
+      errors: errorMessages,
+    });
+  }
+
+  // 2. if Nodemailer/Database other any  Server Error occur (Status: 500)
+  console.error("🚨 GLOBAL ERROR LOG:", err.message);
+  return res.status(500).json({
+    success: false,
+    message: err.message || "Internal Server Error",
+  });
+});
 
 const PORT = process.env.PORT || 5000;
 

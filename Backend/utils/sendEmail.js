@@ -11,7 +11,7 @@ const transporter = nodemailer.createTransport({
 });
 
 // step 2 : Making a reusable function , import everyWhere for sending email
-const sendEmail = async ({ to, subject, text }) => {
+const sendEmail = async ({ to, subject, text, html }) => {
   try {
     const mailOptions = {
       from: `JavaGurukul Core System <${process.env.EMAIL_USER}>`,
@@ -27,7 +27,7 @@ const sendEmail = async ({ to, subject, text }) => {
     return { success: true };
   } catch (error) {
     console.error("Nodemailer Global Error : ", error);
-    return { success: false, error: error.message };
+    throw new Error(`Email Service Failure : ${error.message}`);
   }
 };
 
