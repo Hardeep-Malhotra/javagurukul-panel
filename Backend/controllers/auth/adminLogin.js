@@ -6,16 +6,8 @@ const loginSchema = require("../../validators/loginValidator");
 
 const adminLogin = async (req, res) => {
   try {
-    await loginSchema.validateAsync(req.body, { abortEarly: false });
+    await loginSchema.validateAsync(req.body);
     const { email, password } = req.body;
-
-    // Safety Check: is email and password not given by postman
-    if (!email || !password) {
-      return res.status(400).json({
-        success: false,
-        message: "Please provide both email and password",
-      });
-    }
 
     // 1. Check if user exists
     const user = await User.findOne({ email }).select("+password");
@@ -27,31 +19,12 @@ const adminLogin = async (req, res) => {
       });
     }
 
-    // Safety Check:  if in DB user exits but no password
-    if (!user.password) {
-      return res.status(500).json({
-        success: false,
-        message: "Server Error",
-        error:
-          "User password is not defined in the database. Please re-register this user.",
-      });
-    }
-
     // 2. Verify Password
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(400).json({
         success: false,
         message: "Invalid Email or Password",
-      });
-    }
-
-    // 3. RBAC CHECK: If role USER ya STUDENT, then block
-    if (user.role === "USER" || user.role === "STUDENT") {
-      return res.status(403).json({
-        success: false,
-        message:
-          "Access Denied! You do not have permission to access the Admin Panel.",
       });
     }
 
@@ -73,13 +46,13 @@ const adminLogin = async (req, res) => {
       text: `Hello Admin, your 6-digit secure OTP for Dashboard Login is : ${otp}.\n This OTP is confidential and valid for 5 minutes only.`,
     });
 
-    // 7. if email delivery fail
-    if (!emailResult.success) {
-      return res.status(500).json({
-        success: false,
-        message: "Failed to send verification email. Please try again.",
-      });
-    }
+    // // 7. if email delivery fail
+    // if (!emailResult.success) {
+    //   return res.status(500).json({
+    //     success: false,
+    //     message: "Failed to send verification email. Please try again.",
+    //   });
+    // }
 
     return res.status(200).json({
       success: true,
@@ -88,12 +61,14 @@ const adminLogin = async (req, res) => {
     });
   } catch (error) {
     // if Joi validation is failed this block is run
-    if (error.isJoi && error.details) {
-      const errorMessages = error.details.map((detail) => detail.message);
+    // if (error.isJoi && error.details) {
+    //   const errorMessages = error.details.map((detail) => detail.message);
 
-      return res.status(400).json({ success: false, errors: errorMessages });
-    }
-    console.error("❌ LOGIN ERROR:", error);
+    //   return res.status(400).json({ success: false, errors: errorMessages });
+    // }
+    // console.error("❌ LOGIN ERROR:", error);
+
+    next(error);
     return res.status(500).json({
       success: false,
       message: "Server Error",

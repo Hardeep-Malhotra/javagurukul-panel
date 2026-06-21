@@ -23,7 +23,7 @@ app.use(
 );
 
 // ✅ Main Base Routes (Sir ka gate system)
-app.use("/api", globalRouter);
+app.use(globalRouter);
 
 const PORT = process.env.PORT || 5000;
 

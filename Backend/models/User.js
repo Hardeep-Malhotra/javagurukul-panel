@@ -1,7 +1,5 @@
 const mongoose = require("mongoose");
 
-const emailRegex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
-
 const UserSchema = new mongoose.Schema({
   email: {
     type: String,
@@ -9,7 +7,6 @@ const UserSchema = new mongoose.Schema({
     unique: true,
     trim: true,
     lowercase: true,
-    match: [emailRegex, "Please fill a valid email address"],
   },
   password: {
     type: String,
