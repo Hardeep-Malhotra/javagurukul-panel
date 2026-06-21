@@ -1,15 +1,15 @@
 // 📄 Backend/utils/emailTemplate.js
 
 /**
- * Premium & Ultra-Modern HTML Email Template for JavaGurukul
+ * Premium Educational Portal Theme HTML Email Template for JavaGurukul
  * @param {String} otp - The 6 digit OTP
  * @param {String} title - Heading of the email
  * @param {String} description - Description message
  */
 const getOTPTemplate = (
   otp,
-  title = "Verification Required",
-  description = "Use the following One-Time Password (OTP) to complete your login process. This code is valid for 5 minutes only.",
+  title = "Admin Verification Required",
+  description = "A request has been made to access the JavaGurukul Admin Control Panel. Use the secure One-Time Password (OTP) below to complete your authentication. This code is strictly valid for 5 minutes.",
 ) => {
   return `
     <!DOCTYPE html>
@@ -19,69 +19,78 @@ const getOTPTemplate = (
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>${title}</title>
     </head>
-    <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #fafafa; margin: 0; padding: 0; -webkit-font-smoothing: antialiased;">
-        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #fafafa; padding: 40px 0;">
+    <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f4f6f8; margin: 0; padding: 0; -webkit-font-smoothing: antialiased;">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #f4f6f8; padding: 40px 0;">
             <tr>
                 <td align="center">
-                    <table role="presentation" width="100%" style="max-width: 560px; background-color: #ffffff; border-radius: 16px; box-shadow: 0 8px 30px rgba(0, 0, 0, 0.03); overflow: hidden; border: 1px solid #f0f0f0;" cellspacing="0" cellpadding="0" border="0">
-                        
+                    <table role="presentation" width="100%" style="max-width: 560px; background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05); overflow: hidden; border: 1px solid #e2e8f0;" cellspacing="0" cellpadding="0" border="0">
+                       
                         <tr>
-                            <td align="center" style="background: linear-gradient(135deg, #0f172a, #1e1b4b); padding: 40px 20px; border-bottom: 3px solid #6366f1;">
-                                <img src="https://javagurukul.com/images/java-gurukul-logo.png" alt="JavaGurukul Logo" style="max-width: 170px; height: auto; display: block;" />
-                                <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin-top: 16px;">
+                            <td align="center" style="background-color: #ffffff; padding: 45px 20px 30px 20px; border-bottom: 4px solid #2f8dae;">
+                                <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="background-color: #ffffff;">
                                     <tr>
-                                        <td style="background-color: rgba(99, 102, 241, 0.15); border: 1px solid rgba(99, 102, 241, 0.3); border-radius: 20px; padding: 4px 12px;">
-                                            <span style="color: #a5b4fc; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; display: block; line-height: 1;">
-                                                🔒 Secure Gateway
-                                            </span>
+                                        <td align="center" style="background-color: #ffffff;">
+                                            <img src="https://javagurukul.com/images/java-gurukul-logo.png" 
+                                                 alt="JavaGurukul Logo" 
+                                                 style="max-width: 190px; width: 100%; height: auto; display: block; border: none; outline: none;" />
                                         </td>
                                     </tr>
                                 </table>
+                                
+                                <p style="margin: 20px 0 0 0; color: #64748b; font-family: sans-serif; font-size: 13px; font-weight: 600; letter-spacing: 0.75px; text-transform: uppercase;">
+                                    Internal Management Network
+                                </p>
                             </td>
                         </tr>
 
+                        <!-- EMAIL BODY CONTENT -->
                         <tr>
-                            <td style="padding: 45px 40px 35px 40px; text-align: left;">
-                                <h2 style="color: #0f172a; margin: 0 0 16px 0; font-size: 22px; font-weight: 700; letter-spacing: -0.3px; line-height: 1.3;">
+                            <td style="padding: 40px 40px 30px 40px; text-align: left;">
+                                <h2 style="color: #1e293b; margin: 0 0 16px 0; font-size: 22px; font-weight: 700; letter-spacing: -0.4px; line-height: 1.3;">
                                     ${title}
                                 </h2>
                                 
-                                <p style="color: #475569; font-size: 15px; line-height: 1.6; margin: 0 0 32px 0;">
+                                <p style="color: #475569; font-size: 15px; line-height: 1.6; margin: 0 0 30px 0;">
                                     ${description}
                                 </p>
                                 
-                                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-bottom: 32px;">
+                                <!-- SECURITY OTP BOX -->
+                                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-bottom: 30px;">
                                     <tr>
-                                        <td align="center" style="background-color: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 12px; padding: 24px 20px;">
-                                            <span style="color: #64748b; font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: 1.5px; display: block; margin-bottom: 10px;">
-                                                Your One-Time Password
+                                        <td align="center" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 26px 20px;">
+                                            <span style="color: #64748b; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; display: block; margin-bottom: 12px;">
+                                                Security Verification Code
                                             </span>
-                                            <span style="font-family: 'SF Mono', SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace; font-size: 42px; font-weight: 800; letter-spacing: 8px; color: #4f46e5; display: block; line-height: 1; padding-left: 8px;">
+                                            <span style="font-family: 'SF Mono', SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace; font-size: 44px; font-weight: 800; letter-spacing: 10px; color: #2f8dae; display: block; line-height: 1; padding-left: 10px;">
                                                 ${otp}
                                             </span>
                                         </td>
                                     </tr>
                                 </table>
 
-                                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border-top: 1px solid #f1f5f9; padding-top: 20px;">
+                                <!-- NOTICE BOX -->
+                                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border-top: 1px solid #e2e8f0; padding-top: 20px;">
                                     <tr>
                                         <td>
-                                            <p style="color: #94a3b8; font-size: 13px; line-height: 1.5; margin: 0; text-align: center;">
-                                                ⏳ This code expires in <strong style="color: #64748b;">5 minutes</strong>. If you did not request this authorization, you can safely ignore this system alert.
-                                            </p>
+                                            <div style="background-color: #fff7ed; border-left: 4px solid #f97316; padding: 12px 16px; border-radius: 0 8px 8px 0;">
+                                                <p style="color: #ea580c; font-size: 13px; line-height: 1.5; margin: 0; font-weight: 500;">
+                                                    ⚠️ <strong>Security Notice:</strong> This code is valid for <strong>5 minutes</strong> only. Never share this administrative token with anyone. JavaGurukul support will never ask for your admin credential.
+                                                </p>
+                                            </div>
                                         </td>
                                     </tr>
                                 </table>
                             </td>
                         </tr>
 
+                        <!-- FOOTER -->
                         <tr>
-                            <td style="background-color: #f8fafc; padding: 24px 40px; text-align: center; border-top: 1px solid #f1f5f9;">
+                            <td style="background-color: #f8fafc; padding: 24px 40px; text-align: center; border-top: 1px solid #e2e8f0;">
                                 <p style="color: #94a3b8; font-size: 12px; margin: 0 0 6px 0; font-weight: 500;">
-                                    &copy; ${new Date().getFullYear()} JavaGurukul. All security protocols active.
+                                    &copy; ${new Date().getFullYear()} JavaGurukul Educational Portal.
                                 </p>
-                                <p style="color: #cbd5e1; font-size: 11px; margin: 0;">
-                                    Automated dispatch node. Replies are monitored but un-routed.
+                                <p style="color: #cbd5e1; font-size: 11px; margin: 0; letter-spacing: 0.2px;">
+                                    This is an automated system alert from the RBAC core. System IP and actions are logged.
                                 </p>
                             </td>
                         </tr>
