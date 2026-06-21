@@ -9,14 +9,18 @@ const tempRegister = require("../controllers/auth/tempRegister");
 
 // Middleware Import
 const authorizeRoles = require("../middleware/authorizeRoles.");
+const authLimiter = require("../middleware/rateLimiters/authLimiter"); // 👈 Updated Separate Path
 
-// 🔒 Explicit Sequential Security Pipeline for Admin Login
+// 🔒 Guarded Admin Login Pipeline
 router.post(
   "/admin-login",
-  adminLogin, // 1. Credentials Check & Session Context Binding
-  authorizeRoles("ADMIN", "SUPER_ADMIN"), // 2. Role-Based Access Control (RBAC) Guard
-  sendAdminOTP, // 3. Final OTP Dispatch & Secure Response
+  authLimiter,
+  adminLogin,
+  authorizeRoles("ADMIN", "SUPER_ADMIN"),
+  sendAdminOTP,
 );
+
+module.exports = router;
 
 // Other Endpoints
 router.post("/verify-otp", verifyOTP);
