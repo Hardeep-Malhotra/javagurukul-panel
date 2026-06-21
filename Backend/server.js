@@ -4,7 +4,7 @@ const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const globalRouter = require("./routes/index");
 const connectDB = require("./config/db");
-
+const errorHandler = require("./middleware/errorHandler");
 // Connect DataBase
 connectDB();
 
@@ -47,6 +47,7 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 5000;
 
+app.use(errorHandler);
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
