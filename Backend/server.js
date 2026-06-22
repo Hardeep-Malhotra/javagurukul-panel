@@ -5,6 +5,7 @@ const cookieParser = require("cookie-parser");
 const globalRouter = require("./routes/index");
 const connectDB = require("./config/db");
 const errorHandler = require("./middleware/errorHandler");
+
 // Connect DataBase
 connectDB();
 
