@@ -1,12 +1,13 @@
 // 📄 src/pages/Login.jsx
 import { useState } from "react";
-import { Form, Button, message, Spin, Alert } from "antd"; // Alert component add kiya
+import { Form, Button, message, Spin, Alert } from "antd";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useOtpTimer } from "../components/Login/useOtpTimer";
-import { useLockTimer } from "../components/Login/useLockTimer"; // 👈 Naya hook import kiya
+import { useLockTimer } from "../components/Login/useLockTimer";
 import EmailPasswordForm from "../components/Login/EmailPasswordForm";
 import OtpVerificationForm from "../components/Login/OtpVerificationForm";
+import ForgotPasswordModal from "../components/Login/ForgotPasswordModal"; // 👈 Modal imported already
 
 axios.defaults.withCredentials = true;
 
@@ -14,7 +15,7 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [isOtpSent, setIsOtpSent] = useState(false);
   const [userEmail, setUserEmail] = useState("");
-
+  const [isModalOpen, setIsModalOpen] = useState(false); // 👈 Modal state handles visibility
   const { timeLeft, setIsTimerActive, formatTime, resetTimer } =
     useOtpTimer(300);
 
@@ -25,7 +26,7 @@ const Login = () => {
   const [form] = Form.useForm();
 
   const handleResendOtp = async () => {
-    if (isLocked) return; // Block action if app is locked
+    if (isLocked) return;
     setLoading(true);
     try {
       const currentValues = form.getFieldsValue();
@@ -42,10 +43,9 @@ const Login = () => {
         resetTimer();
       }
     } catch (error) {
-      // 🚨 Handle rate limiting during resend
       if (error.response && error.response.status === 429) {
         message.error(error.response.data.message);
-        startLock(3600); // 1 ghante ke liye frontend freeze
+        startLock(3600);
       } else {
         message.error(
           error.response?.data?.message || "Failed to resend OTP. Try again!",
@@ -96,10 +96,9 @@ const Login = () => {
         }
       }
     } catch (error) {
-      // 🚨 YAHAN HOGA ASLI GAME: Catching Rate Limit
       if (error.response && error.response.status === 429) {
         message.error("Security Alert: Too many attempts!");
-        startLock(3600); // 🔥 Frontend ko 1 ghante (3600s) ke liye lock kardo
+        startLock(3600);
       } else {
         message.error(error.response?.data?.message || "Invalid Credentials!");
       }
@@ -136,17 +135,28 @@ const Login = () => {
           spinning={loading}
           tip={isOtpSent ? "Verifying OTP secure..." : "Sending OTP..."}
         >
-          {/* 🔥 fieldsets or disabled form attribute dynamically blocks typing */}
           <Form
             form={form}
             name="admin_login"
             onFinish={onFinish}
             layout="vertical"
             requiredMark={false}
-            disabled={isLocked} // 👈 POORA FORM AUTOMATICALLY TYPELESS HO JAYEGA!
+            disabled={isLocked}
           >
             {/* Step 1 Fields */}
             <EmailPasswordForm isOtpSent={isOtpSent || isLocked} />
+
+            {/* 🔥 1. FORGOT PASSWORD LINK POSITIONED HERE */}
+            {!isOtpSent && !isLocked && (
+              <div className="flex justify-end -mt-2 mb-4">
+                <span
+                  onClick={() => setIsModalOpen(true)}
+                  className="text-sm font-semibold text-[#2f8dae] hover:text-orange-500 cursor-pointer transition-colors"
+                >
+                  Forgot Password?
+                </span>
+              </div>
+            )}
 
             {/* Step 2 Fields */}
             {isOtpSent && !isLocked && (
@@ -164,13 +174,12 @@ const Login = () => {
                 block
                 className="h-11 rounded-lg font-bold text-base shadow-md border-none"
                 style={{
-                  // Color gray out when system is locked
                   backgroundColor:
                     isLocked || (timeLeft === 0 && isOtpSent)
                       ? "#9ca3af"
                       : "#2f8dae",
                 }}
-                disabled={isLocked || (timeLeft === 0 && isOtpSent)} // Button disabled block
+                disabled={isLocked || (timeLeft === 0 && isOtpSent)}
               >
                 {isLocked
                   ? "System Locked"
@@ -182,6 +191,12 @@ const Login = () => {
           </Form>
         </Spin>
       </div>
+
+      {/* 🔥 2. POPUP MODAL INJECTED AT THE BOTTOM */}
+      <ForgotPasswordModal
+        visible={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+      />
     </div>
   );
 };
