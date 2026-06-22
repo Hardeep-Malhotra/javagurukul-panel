@@ -7,6 +7,7 @@ import { useLockTimer } from "../components/Login/useLockTimer";
 import EmailPasswordForm from "../components/Login/EmailPasswordForm";
 import OtpVerificationForm from "../components/Login/OtpVerificationForm";
 import ForgotPasswordModal from "../components/Login/ForgotPasswordModal";
+import Logo from "../assets/java-gurukul-logo.png";
 
 axios.defaults.withCredentials = true;
 
@@ -123,7 +124,7 @@ const Login = () => {
           {/* Logo card - solid white for max contrast/visibility */}
           <div className="bg-white rounded-2xl px-6 py-5 shadow-2xl mb-8">
             <img
-              src="https://javagurukul.com/images/java-gurukul-logo.png"
+              src={Logo}
               alt="JavaGurukul Logo"
               className="h-16 w-auto object-contain"
             />
@@ -176,7 +177,7 @@ const Login = () => {
         <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8 border border-orange-100">
           <div className="flex justify-center mb-6">
             <img
-              src="https://javagurukul.com/images/java-gurukul-logo.png"
+              src={Logo}
               alt="JavaGurukul Logo"
               className="h-30 w-auto object-contain"
             />

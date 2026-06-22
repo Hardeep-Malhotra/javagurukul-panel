@@ -8,7 +8,8 @@ const rateLimit = require("express-rate-limit");
 const authLimiter = rateLimit({
   // 1. Set the strict security time window frame to 1 hour (calculated in milliseconds)
 
-  windowMs: 60 * 60 * 1000,
+  // windowMs: 60 * 60 * 1000,
+  windowMs: 10 * 1000,
 
   // 2. Limit each IP address to a maximum of 5 authentication requests per hour
   max: 5,
