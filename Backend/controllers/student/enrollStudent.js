@@ -23,13 +23,11 @@ const enrollStudent = async (req, res, next) => {
     };
 
     await student.save();
-    res
-      .status(200)
-      .json({
-        success: true,
-        message: "Student enrolled successfully with selected course!",
-        data: student,
-      });
+    res.status(200).json({
+      success: true,
+      message: "Student enrolled successfully with selected course!",
+      data: student,
+    });
   } catch (error) {
     next(error);
   }

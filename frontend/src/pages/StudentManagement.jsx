@@ -1,22 +1,18 @@
-// 📄 src/pages/StudentManagement.jsx
-import { useState } from "react";
-import { Input, Tabs, Table, Tag, Button, Avatar } from "antd";
-import {
-  SearchOutlined,
-  PlusOutlined,
-  EditOutlined,
-  DeleteOutlined,
-} from "@ant-design/icons";
+import React, { useState, useEffect } from "react";
+import { Input, Tabs, Table, Button, message, Modal } from "antd";
+import { SearchOutlined, PlusOutlined } from "@ant-design/icons";
 import AddStudentModal from "../components/Students/AddStudentModal";
+import EnrollStudentModal from "../components/Students/EnrollStudentModal";
+import {
+  getStudentsByTab,
+  unenrollStudent,
+  updateStudentStatus,
+  deleteStudent,
+} from "../services/studentService";
+import { getStudentColumns } from "../utils/studentTableColumns";
 
-// ---- Student data (will be populated from API once backend is connected) ----
-const enrolledStudents = [];
+// Small reusable box that shows one number with a label below it.
 
-const unenrolledStudents = [];
-const registeredStudents = [];
-const temporaryStudents = [];
-
-// ---- Reusable Stat Card ----
 const StatCard = ({ value, label }) => (
   <div className="bg-white rounded-xl shadow-sm border border-orange-50 p-6 text-center">
     <p className="text-3xl font-black text-brand-ink mb-1">{value}</p>
@@ -26,138 +22,195 @@ const StatCard = ({ value, label }) => (
 
 const StudentManagement = () => {
   const [searchText, setSearchText] = useState("");
+
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const columns = [
-    {
-      title: "Student",
-      dataIndex: "name",
-      key: "name",
-      render: (name, record) => (
-        <div className="flex items-start gap-3">
-          <Avatar style={{ backgroundColor: "#14212a" }} className="font-bold">
-            {name
-              .split(" ")
-              .map((n) => n[0])
-              .join("")
-              .slice(0, 2)
-              .toUpperCase()}
-          </Avatar>
-          <div>
-            <p className="font-semibold text-brand-ink m-0">{name}</p>
-            <p className="text-xs text-gray-400 m-0">{record.email}</p>
-          </div>
-        </div>
-      ),
+  const [activeTab, setActiveTab] = useState("registered");
+
+  const [enrollModalOpen, setEnrollModalOpen] = useState(false);
+
+  const [studentToEnroll, setStudentToEnroll] = useState(null);
+
+  const [studentData, setStudentData] = useState({
+    enrolled: [],
+    unenrolled: [],
+    registered: [],
+    temporary: [],
+  });
+
+  // True while we are waiting for data from the server (shows a loading spinner)
+  const [loading, setLoading] = useState(false);
+
+  const fetchTabData = React.useCallback(
+    async (tabKey, isStale = () => false) => {
+      try {
+        await Promise.resolve();
+        if (isStale()) return;
+
+        // Show the loading spinner while we wait for the server
+        setLoading(true);
+
+        // Ask the backend for this tab's students
+        const res = await getStudentsByTab(tabKey);
+
+        // If the user already switched tabs while we were waiting,
+        // throw away this result — it's no longer needed.
+        if (isStale()) return;
+
+        if (res && res.success) {
+          setStudentData((prev) => ({
+            ...prev,
+            // If res.data is missing for any reason, fall back to an
+            // empty array so the app never crashes trying to read
+            // ".length" or ".map" on "undefined".
+            [tabKey]: res.data ?? [],
+          }));
+        }
+      } catch (err) {
+        if (isStale()) return;
+        console.log(err);
+
+        message.error(`Failed to load ${tabKey} data`);
+      } finally {
+        // Hide the loading spinner, but only if this request is still relevant
+        if (!isStale()) setLoading(false);
+      }
     },
-    {
-      title: "Course Info",
-      key: "courseInfo",
-      render: (_, record) => (
-        <div>
-          <p className="text-xs text-gray-400 mb-1">Courses:</p>
-          <div className="flex flex-wrap gap-1 mb-2">
-            {record.courses.map((c) => (
-              <Tag color="blue" key={c}>
-                {c}
-              </Tag>
-            ))}
-          </div>
-          <p className="text-xs text-gray-400 mb-1">Subjects:</p>
-          <div className="flex flex-wrap gap-1">
-            {record.subjects.map((s) => (
-              <Tag color="cyan" key={s}>
-                {s}
-              </Tag>
-            ))}
-          </div>
-        </div>
-      ),
-    },
-    { title: "Phone", dataIndex: "phone", key: "phone" },
-    { title: "Batch", dataIndex: "batch", key: "batch" },
-    { title: "Joined", dataIndex: "joined", key: "joined" },
-    {
-      title: "Status",
-      dataIndex: "status",
-      key: "status",
-      render: (status) => (
-        <Tag color={status === "Active" ? "green" : "red"}>{status}</Tag>
-      ),
-    },
-    { title: "Temp", dataIndex: "temp", key: "temp" },
-    {
-      title: "Actions",
-      key: "actions",
-      render: () => (
-        <div className="flex flex-col gap-2">
-          <Button size="small">Unenroll</Button>
-          <div className="flex gap-3 mt-1">
-            <EditOutlined className="text-brand-blue cursor-pointer" />
-            <DeleteOutlined className="text-red-500 cursor-pointer" />
-          </div>
-        </div>
-      ),
-    },
-  ];
+    [],
+  );
+
+  // This runs automatically every time "activeTab" changes
+  // (i.e. whenever the admin clicks a different tab).
+  // It loads fresh data for whichever tab is now active.
+  useEffect(() => {
+    // "cancelled" is a flag we flip to true if the tab changes again
+    // (or the page closes) before the fetch finishes. fetchTabData
+    // checks this flag and skips updating state if it's true — this
+    // avoids showing outdated data from a slow/old request.
+    let cancelled = false;
+
+    // Note: a linter rule complains here that we are "calling setState
+    // inside an effect". This is a false alarm — fetchTabData only
+    // updates state AFTER an await, never immediately. So it's safe
+    // to silence this specific warning.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchTabData(activeTab, () => cancelled);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeTab, fetchTabData]);
+
+  const handleUnenroll = async (id) => {
+    Modal.confirm({
+      title: "Are you sure you want to unenroll this student?",
+      content:
+        "This will move the student records to historical unenroll logs.",
+      okText: "Yes, Unenroll",
+      okType: "danger",
+      cancelText: "No",
+      onOk: async () => {
+        try {
+          const res = await unenrollStudent(id);
+          if (res.success) {
+            message.warning("Student archived safely! 📄");
+            // Refresh the current tab so the unenrolled student disappears from it
+            fetchTabData(activeTab);
+          }
+        } catch (err) {
+          console.log(err);
+
+          message.error("Could not unenroll the student");
+        }
+      },
+    });
+  };
+
+  const handleEnrollClick = (student) => {
+    setStudentToEnroll(student);
+    setEnrollModalOpen(true);
+  };
+
+  const handleEnrollSuccess = () => {
+    fetchTabData("registered");
+    fetchTabData("unenrolled");
+    fetchTabData("enrolled");
+  };
+
+  const handleStatusToggle = async (id, newStatus) => {
+    try {
+      const res = await updateStudentStatus(id, newStatus);
+      if (res.success) {
+        message.success(`Status updated to ${newStatus}`);
+        // Only need to refresh the tab we're currently looking at
+        fetchTabData(activeTab);
+      }
+    } catch (err) {
+      console.log(err);
+      message.error("Status update nahi ho paaya");
+    }
+  };
+
+  const handleDelete = async (id) => {
+    Modal.confirm({
+      title: "Delete this student permanently?",
+      content:
+        "This action cannot be undone. The student record will be completely removed from the database.",
+      okText: "Yes, Delete Permanently",
+      okType: "danger",
+      cancelText: "Cancel",
+      onOk: async () => {
+        try {
+          const res = await deleteStudent(id);
+          if (res.success) {
+            message.success("Student deleted successfully");
+            // Refresh the current tab so the deleted student disappears
+            fetchTabData(activeTab);
+          } else {
+            message.error(res.message || "Could not delete the student");
+          }
+        } catch (err) {
+          console.log(err);
+          message.error("Could not delete the student");
+        }
+      },
+    });
+  };
+
+  const columns = getStudentColumns(
+    activeTab,
+    handleUnenroll,
+    handleEnrollClick,
+    handleStatusToggle,
+    handleDelete,
+  );
 
   const filterData = (data) =>
-    data.filter(
+    (data || []).filter(
       (s) =>
-        s.name.toLowerCase().includes(searchText.toLowerCase()) ||
-        s.email.toLowerCase().includes(searchText.toLowerCase()),
+        s.name?.toLowerCase().includes(searchText.toLowerCase()) ||
+        s.email?.toLowerCase().includes(searchText.toLowerCase()),
     );
 
-  const tabItems = [
-    {
-      key: "enrolled",
-      label: "Enrolled Students",
+  const tabItems = ["enrolled", "unenrolled", "registered", "temporary"].map(
+    (key) => ({
+      key,
+      label: `${key.charAt(0).toUpperCase() + key.slice(1)} Students`,
       children: (
         <Table
           columns={columns}
-          dataSource={filterData(enrolledStudents)}
+          dataSource={filterData(studentData[key])}
           pagination={{ pageSize: 10 }}
+          loading={loading}
+          rowKey="_id"
         />
       ),
-    },
-    {
-      key: "unenrolled",
-      label: "Unenrolled Students",
-      children: (
-        <Table
-          columns={columns}
-          dataSource={filterData(unenrolledStudents)}
-          pagination={{ pageSize: 10 }}
-        />
-      ),
-    },
-    {
-      key: "registered",
-      label: "Registered Students",
-      children: (
-        <Table
-          columns={columns}
-          dataSource={filterData(registeredStudents)}
-          pagination={{ pageSize: 10 }}
-        />
-      ),
-    },
-    {
-      key: "temporary",
-      label: "Temporary Students",
-      children: (
-        <Table
-          columns={columns}
-          dataSource={filterData(temporaryStudents)}
-          pagination={{ pageSize: 10 }}
-        />
-      ),
-    },
-  ];
+    }),
+  );
 
   return (
     <div>
-      {/* Page Header */}
+      {/* Page header: title on the left, "Add Student" button on the right */}
       <div className="flex justify-between items-start mb-6">
         <div>
           <h1 className="text-2xl font-black text-brand-ink mb-1">
@@ -177,18 +230,28 @@ const StudentManagement = () => {
         </Button>
       </div>
 
-      {/* Stats Cards */}
+      {/* 4 stat cards showing live counts for each category */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <StatCard value={17} label="Total Students" />
-        <StatCard value={14} label="Enrolled" />
-        <StatCard value={0} label="Unenrolled" />
-        <StatCard value={3} label="Registered" />
-      </div>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <StatCard value={0} label="Temp" />
+        <StatCard
+          value={
+            (studentData.enrolled?.length || 0) +
+            (studentData.registered?.length || 0) +
+            (studentData.unenrolled?.length || 0)
+          }
+          label="Total Students"
+        />
+        <StatCard value={studentData.enrolled?.length || 0} label="Enrolled" />
+        <StatCard
+          value={studentData.unenrolled?.length || 0}
+          label="Unenrolled"
+        />
+        <StatCard
+          value={studentData.registered?.length || 0}
+          label="Registered"
+        />
       </div>
 
-      {/* Search Bar */}
+      {/* Search box — typing here filters whichever tab is currently open */}
       <Input
         placeholder="Search students by name or email..."
         prefix={<SearchOutlined className="text-gray-400" />}
@@ -198,18 +261,28 @@ const StudentManagement = () => {
         onChange={(e) => setSearchText(e.target.value)}
       />
 
-      {/* Tabs + Table */}
+      {/* Tabs section — shows the table for whichever tab is selected */}
       <div className="bg-white rounded-xl shadow-sm border border-orange-50 p-5">
-        <Tabs defaultActiveKey="enrolled" items={tabItems} />
+        <Tabs
+          activeKey={activeTab}
+          onChange={(key) => setActiveTab(key)}
+          items={tabItems}
+        />
       </div>
 
-      {/* Add Student Modal */}
+      {/* Popup for adding a brand-new student (goes into "Registered" tab) */}
       <AddStudentModal
         visible={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onSuccess={() => {
-          // TODO: refetch student list from API once backend is connected
-        }}
+        onSuccess={() => fetchTabData(activeTab)}
+      />
+
+      {/* Popup for enrolling / re-enrolling a student into a course */}
+      <EnrollStudentModal
+        visible={enrollModalOpen}
+        student={studentToEnroll}
+        onClose={() => setEnrollModalOpen(false)}
+        onSuccess={handleEnrollSuccess}
       />
     </div>
   );

@@ -1,5 +1,6 @@
 // 📄 src/components/Students/AddStudentModal.jsx
 import { Modal, Form, Input, Select, Button, message } from "antd";
+import { addStudent } from "../../services/studentService";
 
 const { Option } = Select;
 
@@ -8,17 +9,22 @@ const AddStudentModal = ({ visible, onClose, onSuccess }) => {
 
   const handleSubmit = async (values) => {
     try {
-      // TODO: Replace with actual API call once backend route is ready
-      // Example:
-      // const response = await axios.post("http://localhost:5000/api/admin/students", values);
+      // ✅ Real API call — this actually saves the student in the
+      // database now, instead of just logging the form values.
+      const res = await addStudent(values);
 
-      console.log("Form values to send to backend:", values);
-
-      message.success("Student added successfully!");
-      form.resetFields();
-      onSuccess?.(); // refresh student list after adding
-      onClose();
+      if (res.success) {
+        message.success("Student added successfully!");
+        form.resetFields();
+        onSuccess?.(); // refresh student list after adding
+        onClose();
+      } else {
+        // Backend responded but said it failed (e.g. duplicate email)
+        message.error(res.message || "Failed to add student. Try again!");
+      }
     } catch (error) {
+      // Network error, or backend threw an error (e.g. validation failed)
+      console.log(error);
       message.error(
         error.response?.data?.message || "Failed to add student. Try again!",
       );
@@ -104,12 +110,13 @@ const AddStudentModal = ({ visible, onClose, onSuccess }) => {
         <Form.Item
           label="Status"
           name="status"
-          initialValue="active"
+          initialValue="Active"
           rules={[{ required: true, message: "Please select status" }]}
         >
           <Select size="large">
-            <Option value="active">Active</Option>
-            <Option value="inactive">Inactive</Option>
+            {/* ✅ Values must match backend enum exactly: "Active" / "Inactive" */}
+            <Option value="Active">Active</Option>
+            <Option value="Inactive">Inactive</Option>
           </Select>
         </Form.Item>
 
