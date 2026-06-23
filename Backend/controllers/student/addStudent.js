@@ -1,34 +1,57 @@
 const Student = require("../../models/Student");
-const { addStudentSchema } = require("../../validators/studentValidator");
+const sendEmail = require("../../utils/sendEmail");
+const getStudentRegistrationTemplate = require("../../utils/studentRegisterTemplate"); // 👈 Clean Separate File Call!
 
 const addStudent = async (req, res, next) => {
   try {
-    const validatedBody = await addStudentSchema.validateAsync(req.body, {
-      abortEarly: false,
-    });
+    const { name, email, phone, address, batch, status } = req.body;
 
-    const existingStudent = await Student.findOne({
-      email: validatedBody.email,
-    });
+    // 1. Duplicate Check
+    const existingStudent = await Student.findOne({ email });
     if (existingStudent) {
-      const err = new Error("A student with this email already exists!");
-      err.statusCode = 400;
-      return next(err);
+      return res.status(400).json({
+        success: false,
+        message: "Student already registered with this email",
+      });
     }
 
-    const newStudent = new Student(validatedBody);
+    // 2. Student Creation
+    const newStudent = new Student({
+      name,
+      email,
+      phone,
+      address,
+      batch,
+      status: status || "Active",
+      category: "REGISTERED",
+    });
+
     await newStudent.save();
 
-    res
-      .status(201)
-      .json({
-        success: true,
-        message: "Student registered successfully!",
-        data: newStudent,
+    // 🚀 3. Live Email Trigger from separate clean template file
+    try {
+      const emailSubject = "Welcome to JavaGurukul! 🎉 Portal Account Created";
+      const emailHtmlContent = getStudentRegistrationTemplate(name, batch);
+
+      await sendEmail({
+        to: email,
+        subject: emailSubject,
+        html: emailHtmlContent,
       });
+      console.log(`📧 Separate Template Mail sent successfully to: ${email}`);
+    } catch (mailError) {
+      console.error("🚨 Email triggering issue:", mailError.message);
+    }
+
+    // 4. Success Response
+    return res.status(201).json({
+      success: true,
+      message: "Student registered successfully!",
+      data: newStudent,
+    });
   } catch (error) {
     next(error);
   }
 };
 
-module.exports = addStudent; // Direct function export kiya
+module.exports = addStudent;
