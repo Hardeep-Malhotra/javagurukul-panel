@@ -26,13 +26,21 @@ export const unenrollStudent = async (id) => {
   const response = await axios.put(`${API_URL}/${id}/unenroll`);
   return response.data;
 };
+
 // 5. Update Student Status (Active/Inactive toggle)
 export const updateStudentStatus = async (id, status) => {
   const response = await axios.put(`${API_URL}/${id}/status`, { status });
   return response.data;
 };
+
 // 6. Delete Student (permanent delete)
 export const deleteStudent = async (id) => {
   const response = await axios.delete(`${API_URL}/${id}`);
+  return response.data;
+};
+
+//  7. Check Email Availability (Live Unique Check)
+export const checkEmailAvailability = async (email) => {
+  const response = await axios.post(`${API_URL}/check-email`, { email });
   return response.data;
 };

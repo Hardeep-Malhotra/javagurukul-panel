@@ -8,9 +8,10 @@ const enrollStudent = require("../controllers/student/enrollStudent");
 const unenrollStudent = require("../controllers/student/unenrollStudent");
 const updateStatus = require("../controllers/student/updateStatus");
 const deleteStudent = require("../controllers/student/deleteStudent");
-
+const { checkEmailExists } = require("../controllers/student/checkEmail");
 // Pipeline Setup
 router.post("/add", addStudent);
+router.post("/check-email", checkEmailExists);
 router.get("/tab/:category", getStudentsByCategory);
 router.put("/:id/enroll", enrollStudent);
 router.put("/:id/unenroll", unenrollStudent);
