@@ -1,6 +1,6 @@
 // 📄 src/components/Layout/AdminLayout.jsx
 import { Layout, Menu, Button, message, Avatar } from "antd";
-import { useNavigate, useLocation, Outlet } from "react-router-dom";
+import { useNavigate } from "react-router-dom"; // 👈 useLocation hata diya hai
 import {
   DashboardOutlined,
   BellOutlined,
@@ -16,42 +16,15 @@ import {
   UserOutlined,
 } from "@ant-design/icons";
 import { useState } from "react";
+import Cookies from "js-cookie";
+import Dashboard from "../../pages/Dashboard";
+import StudentManagement from "../../pages/StudentManagement";
 
 const { Header, Sider, Content } = Layout;
 
-// Map each menu key to its route path
-const menuRoutes = {
-  1: "/dashboard",
-  2: "/students",
-  3: "/notifications",
-  4: "/demo-classes",
-  5: "/courses",
-  6: "/subjects",
-  7: "/live-classes",
-  8: "/recorded-lectures",
-  9: "/study-materials",
-  10: "/support",
-  11: "/privacy-policy",
-};
-
-// Map each route path back to its menu key (for highlighting active item)
-// const routeToKey = {
-//   "/dashboard": "1",
-//   "/students": "2",
-//   "/notifications": "3",
-//   "/demo-classes": "4",
-//   "/courses": "5",
-//   "/subjects": "6",
-//   "/live-classes": "7",
-//   "/recorded-lectures": "8",
-//   "/study-materials": "9",
-//   "/support": "10",
-//   "/privacy-policy": "11",
-// };
-
 const menuSections = [
   {
-    title: null, // primary section, no label needed
+    title: null,
     items: [
       { key: "1", icon: <DashboardOutlined />, label: "Dashboard" },
       { key: "2", icon: <TeamOutlined />, label: "Students" },
@@ -84,27 +57,26 @@ const menuSections = [
 
 const AdminLayout = () => {
   const navigate = useNavigate();
-  const location = useLocation();
+  const [key, setKey] = useState("1");
 
-  const userData = JSON.parse(localStorage.getItem("adminUser")) || {
-    name: "Admin",
-    role: "SUPER_ADMIN",
-  };
+  // 🚀 Cookies shift check done
+  const savedUser = Cookies.get("adminUser");
+  const userData = savedUser
+    ? JSON.parse(savedUser)
+    : {
+        name: "Admin",
+        role: "SUPER_ADMIN",
+      };
 
   const handleLogout = () => {
-    localStorage.clear();
+    Cookies.remove("adminUser"); // Clear cookies safely
     message.info("Logged out successfully.");
     navigate("/");
   };
-  const [key, setKey] = useState("1");
+
   const handleMenuClick = (e) => {
-    // const path = menuRoutes[e.key];
-    // if (path) navigate(path);
-    console.log(e.key);
     setKey(e.key);
   };
-
-  const selectedKey = routeToKey[location.pathname] || "1";
 
   return (
     <Layout className="min-h-screen">
@@ -117,15 +89,15 @@ const AdminLayout = () => {
         className="border-r border-gray-200/80 shadow-sm"
       >
         {/* Top-Left Big Logo Container */}
-        {/* Top-Left Big Logo Container - Fixed for full sidebar width */}
         <div className="w-full flex items-center justify-center p-4 bg-white border-b border-gray-100 h-24">
           <img
             src="https://javagurukul.com/images/java-gurukul-logo.png"
             alt="JavaGurukul Logo"
             className="w-[85%] h-100 max-h-[75px] object-contain cursor-pointer"
-            onClick={() => navigate("/dashboard")}
+            onClick={() => setKey("1")}
           />
         </div>
+
         {/* Navigation Area */}
         <nav
           className="py-4 px-3 overflow-y-auto"
@@ -141,7 +113,7 @@ const AdminLayout = () => {
               <Menu
                 mode="inline"
                 selectable
-                selectedKeys={[selectedKey]}
+                selectedKeys={[key]} // Directly tracked by current state key
                 onClick={handleMenuClick}
                 style={{ backgroundColor: "transparent", border: "none" }}
                 items={section.items.map((item) => ({
@@ -168,52 +140,24 @@ const AdminLayout = () => {
 
         {/* Scoped Custom Styles */}
         <style>{`
-          .custom-admin-menu.ant-menu {
-            background: transparent;
-          }
-          .custom-admin-menu .ant-menu-item {
-            margin: 4px 0 !important;
-            border-radius: 8px;
-            color: #14212a !important;
-            font-weight: 500;
-            font-size: 14px;
-            transition: all 0.2s ease;
-          }
-          .custom-admin-menu .ant-menu-item .anticon {
-            color: #5d6971 !important;
-          }
-          .custom-admin-menu .ant-menu-item:hover {
-            color: #fb991d !important;
-            background-color: #fffaf3 !important;
-          }
-          .custom-admin-menu .ant-menu-item:hover .anticon {
-            color: #fb991d !important;
-          }
-          .custom-admin-menu .ant-menu-item-selected {
-            background-color: #fffaf3 !important;
-            color: #fb991d !important;
-            font-weight: 600;
-          }
-          .custom-admin-menu .ant-menu-item-selected .anticon {
-            color: #fb991d !important;
-          }
-          .custom-admin-menu .ant-menu-item-selected::after {
-            border-right: 3px solid #fb991d !important;
-          }
+          .custom-admin-menu.ant-menu { background: transparent; }
+          .custom-admin-menu .ant-menu-item { margin: 4px 0 !important; border-radius: 8px; color: #14212a !important; font-weight: 500; font-size: 14px; transition: all 0.2s ease; }
+          .custom-admin-menu .ant-menu-item .anticon { color: #5d6971 !important; }
+          .custom-admin-menu .ant-menu-item:hover { color: #fb991d !important; background-color: #fffaf3 !important; }
+          .custom-admin-menu .ant-menu-item:hover .anticon { color: #fb991d !important; }
+          .custom-admin-menu .ant-menu-item-selected { background-color: #fffaf3 !important; color: #fb991d !important; font-weight: 600; }
+          .custom-admin-menu .ant-menu-item-selected .anticon { color: #fb991d !important; }
+          .custom-admin-menu .ant-menu-item-selected::after { border-right: 3px solid #fb991d !important; }
         `}</style>
       </Sider>
 
       {/* Main Layout Area */}
       <Layout style={{ backgroundColor: "#fffaf3" }}>
-        {/* Header - Fixed right-side profile components to White */}
-        {/* Header - Fixed with strict background color override */}
-        {/* Premium Enhanced White Header */}
-        {/* Premium Crisp White Header */}
         <Header
           className="px-8 flex justify-between items-center bg-white border-b border-gray-100 shadow-[0_1px_3px_rgba(0,0,0,0.02)] h-16"
           style={{ backgroundColor: "#ffffff", padding: "0 32px" }}
         >
-          {/* Left Side: Minimalist Welcome Greeting */}
+          {/* Left Side: Welcome Greeting */}
           <div>
             <h2 className="text-base sm:text-lg font-bold text-brand-ink m-0 flex items-center gap-2.5 tracking-tight">
               Welcome, <span>{userData.name}</span>
@@ -223,18 +167,14 @@ const AdminLayout = () => {
             </h2>
           </div>
 
-          {/* Right Side: Clean Profile & Action Layout */}
+          {/* Right Side: Profile Actions */}
           <div className="flex items-center gap-4">
-            {/* Clean Profile Section (No extra background coloring) */}
             <div className="flex items-center gap-3 py-1 pr-1 border-r border-gray-100 hidden sm:flex">
               <Avatar
                 size={36}
                 icon={<UserOutlined />}
                 className="border border-gray-200"
-                style={{
-                  backgroundColor: "#ffffff",
-                  color: "#14212a",
-                }} /* Pure white background avatar with ink icon */
+                style={{ backgroundColor: "#ffffff", color: "#14212a" }}
               />
               <div className="flex flex-col text-left">
                 <span className="text-xs font-bold text-brand-ink leading-tight">
@@ -246,7 +186,6 @@ const AdminLayout = () => {
               </div>
             </div>
 
-            {/* Elegant Standard Bordered Button */}
             <Button
               type="default"
               icon={<LogoutOutlined className="text-xs" />}
@@ -267,9 +206,18 @@ const AdminLayout = () => {
             </Button>
           </div>
         </Header>
+
         {/* Core Content Route Area */}
         <Content className="m-6">
-          {key === "1" ? <Dashboard/> ? key === "2" <Student/> : "not found" : "not found"}
+          {key === "1" ? (
+            <Dashboard />
+          ) : key === "2" ? (
+            <StudentManagement />
+          ) : (
+            <div className="bg-white p-6 rounded-xl shadow-sm text-center font-medium text-gray-500">
+              Coming Soon... Component for Key {key} is under development.
+            </div>
+          )}{" "}
         </Content>
       </Layout>
     </Layout>
