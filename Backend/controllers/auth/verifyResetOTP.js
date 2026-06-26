@@ -1,5 +1,5 @@
 // 📄 Backend/controllers/auth/verifyResetOTP.js
-const temporaryOTPStore = require("./otpStore"); // 🔥 Direct Raw Import
+const temporaryOTPStore = require("./otpStore");
 const {
   verifyResetOtpSchema,
 } = require("../../validators/forgotPasswordValidator");
@@ -13,7 +13,6 @@ const verifyResetOTP = async (req, res, next) => {
     const email = validatedBody.email.toLowerCase();
     const { otp } = validatedBody;
 
-    // DEBUG LOG: Console me check karo kya data memory me exist karta hai
     console.log("🔍 [Memory Lookup] Checking key:", email);
     console.log("📦 [Memory Content]:", temporaryOTPStore);
 

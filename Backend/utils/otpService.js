@@ -1,6 +1,6 @@
 const sendEmail = require("./sendEmail");
 const { temporaryOTPStore } = require("../controllers/auth/otpStore");
-const getOTPTemplate = require("./emailTemplate");
+const getOTPTemplate = require("./emailTemplates/otpEmailTemplate");
 
 /**
  * Generic OTP Generator and Sender Service (HTML Layout Supported)
@@ -17,10 +17,10 @@ const sendOTPService = async (
   title,
   description,
 ) => {
-  // 1. 6 Digit Random OTP Generate \
+  // 1. 6 Digit Random OTP Generate
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
-  // 2. Temporary Store mein data save \ (5 minutes expiry)
+  // 2. Temporary Store mein data save (5 minutes expiry)
   temporaryOTPStore[email] = {
     otp: otp,
     ...sessionData,

@@ -1,7 +1,6 @@
 const Student = require("../../models/Student");
 const sendEmail = require("../../utils/sendEmail");
-const getStudentRegistrationTemplate = require("../../utils/studentRegisterTemplate"); // 👈 Clean Separate File Call!
-
+const getOtpEmailTemplate = require("../../utils/emailTemplates/otpEmailTemplate");
 const addStudent = async (req, res, next) => {
   try {
     const { name, email, phone, address, batch, status } = req.body;
