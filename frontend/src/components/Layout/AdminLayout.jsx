@@ -15,6 +15,7 @@ import {
   TeamOutlined,
   UserOutlined,
 } from "@ant-design/icons";
+import { useState } from "react";
 
 const { Header, Sider, Content } = Layout;
 
@@ -34,19 +35,19 @@ const menuRoutes = {
 };
 
 // Map each route path back to its menu key (for highlighting active item)
-const routeToKey = {
-  "/dashboard": "1",
-  "/students": "2",
-  "/notifications": "3",
-  "/demo-classes": "4",
-  "/courses": "5",
-  "/subjects": "6",
-  "/live-classes": "7",
-  "/recorded-lectures": "8",
-  "/study-materials": "9",
-  "/support": "10",
-  "/privacy-policy": "11",
-};
+// const routeToKey = {
+//   "/dashboard": "1",
+//   "/students": "2",
+//   "/notifications": "3",
+//   "/demo-classes": "4",
+//   "/courses": "5",
+//   "/subjects": "6",
+//   "/live-classes": "7",
+//   "/recorded-lectures": "8",
+//   "/study-materials": "9",
+//   "/support": "10",
+//   "/privacy-policy": "11",
+// };
 
 const menuSections = [
   {
@@ -95,10 +96,12 @@ const AdminLayout = () => {
     message.info("Logged out successfully.");
     navigate("/");
   };
-
+  const [key, setKey] = useState("1");
   const handleMenuClick = (e) => {
-    const path = menuRoutes[e.key];
-    if (path) navigate(path);
+    // const path = menuRoutes[e.key];
+    // if (path) navigate(path);
+    console.log(e.key);
+    setKey(e.key);
   };
 
   const selectedKey = routeToKey[location.pathname] || "1";
@@ -266,7 +269,7 @@ const AdminLayout = () => {
         </Header>
         {/* Core Content Route Area */}
         <Content className="m-6">
-          <Outlet />
+          {key === "1" ? <Dashboard/> ? key === "2" <Student/> : "not found" : "not found"}
         </Content>
       </Layout>
     </Layout>

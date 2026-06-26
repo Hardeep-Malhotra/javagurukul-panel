@@ -17,6 +17,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import Cookies from "js-cookie";
 
 // ---- Dummy data (replace with API data later) ----
 const enrollmentData = [
@@ -105,9 +106,8 @@ const StatCard = ({ title, value, icon, note, noteColor }) => (
 );
 
 const Dashboard = () => {
-  const userData = JSON.parse(localStorage.getItem("adminUser")) || {
-    name: "Admin",
-  };
+  const savedUser = Cookies.get("adminUser");
+  const userData = savedUser ? JSON.parse(savedUser) : { name: "Admin" };
 
   const enrollmentColumns = [
     {
