@@ -14,30 +14,26 @@ const demoClassSchema = new mongoose.Schema(
     classType: {
       type: String,
       enum: ["LIVE", "RECORDED"],
-      required: [true, "Class type (LIVE or RECORDED is required"],
+      required: [true, "Class type (LIVE or RECORDED) is required"],
     },
-    // Specific fields for LIVE session
+
     classDate: {
       type: Date,
-      trim: true,
-      required: [true, "LIVE Class date is required"],
     },
     classTime: {
       type: String,
-      trim: true,
-      required: [true, "LIVE Class date is required"],
     },
     meetingLink: {
       type: String,
       trim: true,
     },
-
     status: {
       type: String,
       enum: ["UPCOMING", "COMPLETED"],
       default: "UPCOMING",
     },
-    // Specific field for RECORDED video
+
+    // RECORDED video ke liye (Cloudinary link)
     videoUrl: {
       type: String,
       trim: true,

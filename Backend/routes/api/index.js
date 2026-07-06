@@ -8,5 +8,5 @@ const demoClassRoutes = require("../demoClass.route");
 // 🛣️ Base Middleware Pipelines Setup
 router.use("/auth", authRoutes);
 router.use("/students", studentRoutes);
-router.use("/demo-classes".demoClassRoutes);
+router.use("/demo-classes", demoClassRoutes);
 module.exports = router;
