@@ -146,11 +146,29 @@ const AddStudentModal = ({ visible, onClose, onSuccess }) => {
           </Form.Item>
 
           <Form.Item
-            label="Batch"
+            label="Assign Batch"
             name="batch"
-            rules={[{ required: true, message: "Please enter batch" }]}
+            rules={[
+              {
+                required: true,
+                message: "Please select a batch for the student!",
+              },
+            ]}
           >
-            <Input placeholder="e.g. Batch 2026-A" size="large" />
+            <Select size="large" placeholder="Select admission batch">
+              <Option value="JANUARY">JANUARY BATCH</Option>
+              <Option value="FEBRUARY">FEBRUARY BATCH</Option>
+              <Option value="MARCH">MARCH BATCH</Option>
+              <Option value="APRIL">APRIL BATCH</Option>
+              <Option value="MAY">MAY BATCH</Option>
+              <Option value="JUNE">JUNE BATCH</Option>
+              <Option value="JULY">JULY BATCH</Option>
+              <Option value="AUGUST">AUGUST BATCH</Option>
+              <Option value="SEPTEMBER">SEPTEMBER BATCH</Option>
+              <Option value="OCTOBER">OCTOBER BATCH</Option>
+              <Option value="NOVEMBER">NOVEMBER BATCH</Option>
+              <Option value="DECEMBER">DECEMBER BATCH</Option>
+            </Select>
           </Form.Item>
 
           <Form.Item
