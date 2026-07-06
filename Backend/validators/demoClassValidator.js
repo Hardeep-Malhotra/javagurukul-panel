@@ -53,10 +53,8 @@ const demoClassValidator = (req, res, next) => {
   const { error } = demoClassSchema.validate(req.body, { abortEarly: true }); // abortEarly: true se pehli error aate hi ruk jayega
 
   if (error) {
-    return res.status(400).json({
-      success: false,
-      message: error.details[0].message, // Sedge bache ko clean error message dikhega
-    });
+    error.isJoi = true;
+    return next(error);
   }
 
   next();
