@@ -39,12 +39,6 @@ const studentSchema = new mongoose.Schema(
       enum: ["REGISTERED", "ENROLLED", "UNENROLLED", "TEMPORARY"],
       default: "REGISTERED",
     },
-    batch: [
-      {
-        type: String,
-        trim: true,
-      },
-    ],
     enrollmentDetails: {
       courseName: {
         type: String,

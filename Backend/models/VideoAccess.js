@@ -12,6 +12,10 @@ const videoAccessSchema = new mongoose.Schema(
       required: [true, "Video Title is required"],
       trim: true,
     },
+    description: {
+      type: String,
+      required: true,
+    },
     thumbnail: {
       type: String,
     },
