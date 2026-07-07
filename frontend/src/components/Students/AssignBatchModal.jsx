@@ -50,18 +50,12 @@ const AssignBatchModal = ({
 
     setLoading(true);
     try {
-      // 🌟 FIXED: Backend controllers ki fields mapping ke exact keys ko full check aur fallbacks ke sath bhej rahe hain
       const payload = {
-        videoUrl:
-          videoData.videoUrl ||
-          videoData.url ||
-          `https://www.youtube.com/watch?v=${videoData.youtubeVideoId}`,
-        title: videoData.title,
-        thumbnailUrl: videoData.thumbnailUrl || "",
+        videoId: videoData._id,
         batchName: values.batchName,
       };
 
-      console.log("Sending payload to backend:", payload); // 🔍 Debugging ke liye browser console me check karne ke liye
+      console.log("Sending payload:", payload);
 
       const response = await assignVideoToBatch(payload);
       if (response.success) {

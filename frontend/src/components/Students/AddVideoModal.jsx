@@ -1,11 +1,9 @@
-// 📄 frontend/src/components/Students/AddVideoModal.jsx
 import { useState } from "react";
 import { Modal, Form, Input, message } from "antd";
 import {
   VideoCameraOutlined,
   FileTextOutlined,
   LinkOutlined,
-  PictureOutlined,
 } from "@ant-design/icons";
 import { addVideoToLibrary } from "../../services/videoService";
 
@@ -17,16 +15,37 @@ const AddVideoModal = ({ isOpen, onClose, onRefresh }) => {
 
   const handleSubmit = async (values) => {
     setLoading(true);
+
     try {
-      const response = await addVideoToLibrary(values);
+      // YouTube Video ID Extract
+      let thumbnailUrl = "";
+      const regExp =
+        /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#&?]*).*/;
+
+      const match = values.videoUrl.match(regExp);
+
+      if (match && match[2].length === 11) {
+        thumbnailUrl = `https://img.youtube.com/vi/${match[2]}/hqdefault.jpg`;
+      }
+
+      const payload = {
+        title: values.title,
+        description: values.description,
+        videoUrl: values.videoUrl,
+        thumbnailUrl,
+      };
+
+      const response = await addVideoToLibrary(payload);
+
       if (response.success) {
-        message.success(response.message || "Video added to library!");
+        message.success(response.message || "Video added successfully!");
         form.resetFields();
+
+        if (onRefresh) onRefresh();
         onClose();
-        if (onRefresh) onRefresh(); // List refresh karne ke liye
       }
     } catch (error) {
-      message.error(error.message || "Failed to add video to repository.");
+      message.error(error.message || "Failed to add video.");
     } finally {
       setLoading(false);
     }
@@ -35,9 +54,9 @@ const AddVideoModal = ({ isOpen, onClose, onRefresh }) => {
   return (
     <Modal
       title={
-        <div className="flex items-center gap-2 text-lg font-bold text-gray-800">
+        <div className="flex items-center gap-2 text-lg font-bold">
           <VideoCameraOutlined className="text-[#fb991d]" />
-          <span>Add New Video Lecture</span>
+          Add New Lecture
         </div>
       }
       open={isOpen}
@@ -50,86 +69,73 @@ const AddVideoModal = ({ isOpen, onClose, onRefresh }) => {
       okText="Save Video"
       cancelText="Cancel"
       okButtonProps={{
-        style: { backgroundColor: "#fb991d", borderColor: "#fb991d" },
-        className: "hover:bg-[#e08516]",
+        style: {
+          backgroundColor: "#fb991d",
+          borderColor: "#fb991d",
+        },
       }}
     >
       <Form
         form={form}
         layout="vertical"
-        onFinish={handleSubmit}
         className="mt-4"
+        onFinish={handleSubmit}
       >
-        {/* Lecture Title */}
         <Form.Item
           name="title"
-          label={
-            <span className="font-semibold text-gray-700">Lecture Title</span>
-          }
-          rules={[
-            { required: true, message: "Please enter the lecture title" },
-          ]}
-        >
-          <Input
-            placeholder="e.g., JWT Complete Course (Part 1)"
-            prefix={<VideoCameraOutlined className="text-gray-400" />}
-          />
-        </Form.Item>
-
-        {/* Description */}
-        <Form.Item
-          name="description"
-          label={
-            <span className="font-semibold text-gray-700">Description</span>
-          }
+          label="Lecture Title"
           rules={[
             {
               required: true,
-              message: "Please enter a short lecture description",
+              message: "Please enter lecture title",
+            },
+          ]}
+        >
+          <Input
+            prefix={<VideoCameraOutlined />}
+            placeholder="Node.js Authentication"
+          />
+        </Form.Item>
+
+        <Form.Item
+          name="description"
+          label="Description"
+          rules={[
+            {
+              required: true,
+              message: "Please enter description",
             },
           ]}
         >
           <TextArea
-            rows={3}
-            placeholder="Briefly describe what is covered in this lecture session..."
-            prefix={<FileTextOutlined className="text-gray-400" />}
+            rows={4}
+            placeholder="Brief description of this lecture..."
           />
         </Form.Item>
 
-        {/* YouTube Video URL */}
         <Form.Item
           name="videoUrl"
-          label={
-            <span className="font-semibold text-gray-700">
-              YouTube Video URL
-            </span>
-          }
+          label="YouTube Video URL"
           rules={[
-            { required: true, message: "Please paste the YouTube URL" },
-            { type: "url", message: "Please enter a valid URL link" },
+            {
+              required: true,
+              message: "Please enter YouTube URL",
+            },
+            {
+              type: "url",
+              message: "Please enter valid URL",
+            },
           ]}
         >
           <Input
-            placeholder="e.g., https://www.youtube.com/watch?v=..."
-            prefix={<LinkOutlined className="text-gray-400" />}
+            prefix={<LinkOutlined />}
+            placeholder="https://www.youtube.com/watch?v=..."
           />
         </Form.Item>
 
-        {/* Optional Thumbnail URL */}
-        <Form.Item
-          name="thumbnailUrl"
-          label={
-            <span className="font-semibold text-gray-700">
-              Custom Thumbnail URL{" "}
-              <span className="text-gray-400 font-normal">(Optional)</span>
-            </span>
-          }
-        >
-          <Input
-            placeholder="Leave empty to auto-extract from YouTube link"
-            prefix={<PictureOutlined className="text-gray-400" />}
-          />
-        </Form.Item>
+        <div className="bg-gray-50 border rounded-lg p-3 text-sm text-gray-500">
+          📌 Thumbnail will be automatically generated from the YouTube video.
+        </div>
       </Form>
     </Modal>
   );

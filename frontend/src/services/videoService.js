@@ -46,3 +46,21 @@ export const assignVideoToBatch = async (payload) => {
     throw error.response?.data || new Error("Failed to assign batch");
   }
 };
+
+export const editVideoDetails = async (videoId, updatedData) => {
+  try {
+    const response = await axios.put(`${API_URL}/edit/${videoId}`, updatedData);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || new Error("Failed to edit video");
+  }
+};
+
+export const deleteVideoFromLibrary = async (videoId) => {
+  try {
+    const response = await axios.delete(`${API_URL}/delete/${videoId}`);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || new Error("Failed to delete video");
+  }
+};
