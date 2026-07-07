@@ -16,8 +16,9 @@ const videoAccessSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    thumbnail: {
+    thumbnailUrl: {
       type: String,
+      default: "",
     },
 
     assignedBatches: [
