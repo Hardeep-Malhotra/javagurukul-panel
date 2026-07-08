@@ -2,7 +2,7 @@
 import axios from "axios";
 
 // Backend base URL (Ensure this matches your server port entry precisely)
-const API_URL = "http://localhost:5000/api/student";
+const API_URL = "http://localhost:5000/api/students";
 
 // ==========================================
 // 🛡️ ADMIN PANEL OPERATION METHODS

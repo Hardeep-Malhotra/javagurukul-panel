@@ -10,6 +10,7 @@ const unenrollStudent = require("../controllers/student/unenrollStudent");
 const updateStatus = require("../controllers/student/updateStatus");
 const deleteStudent = require("../controllers/student/deleteStudent");
 const { checkEmailExists } = require("../controllers/student/checkEmail");
+const getVideoById = require("../controllers/VideoAccess/getVideoById");
 const { verifyStudent } = require("../middleware/studentAuth");
 
 // 2. Import New Student Portal Controllers & Middleware
@@ -56,6 +57,7 @@ router.get("/my-batch-videos/:batchName", verifyStudent, async (req, res) => {
   }
 });
 
+router.get("/video-access/:videoId", verifyStudent, getVideoById);
 // ==========================================
 // 🛡️ ADMIN PANEL WORKFLOW ROUTES (Existing)
 // ==========================================

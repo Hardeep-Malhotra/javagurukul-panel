@@ -9,9 +9,9 @@ import {
   DeleteOutlined,
 } from "@ant-design/icons";
 import { getAllVideos, deleteVideoFromLibrary } from "../services/videoService";
-import AddVideoModal from "../components/Students/AddVideoModal";
-import AssignBatchModal from "../components/Students/AssignBatchModal";
-import EditVideoModal from "../components/Students/EditVideoModal";
+import AddVideoModal from "../components/Videos/AddVideoModal";
+import AssignBatchModal from "../components/Videos/AssignBatchModal";
+import EditVideoModal from "../components/Videos/EditVideoModal";
 
 const VideoManagement = () => {
   const [videos, setVideos] = useState([]);
