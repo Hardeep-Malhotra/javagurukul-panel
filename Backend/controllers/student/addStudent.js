@@ -1,12 +1,16 @@
+// 📄 Backend/controllers/student/addStudent.js
 const Student = require("../../models/Student");
 const sendEmail = require("../../utils/sendEmail");
-const getOtpEmailTemplate = require("../../utils/emailTemplates/otpEmailTemplate");
+const getStudentRegistrationTemplate = require("../../utils/emailTemplates/studentRegisterTemplate");
+
 const addStudent = async (req, res, next) => {
   try {
     const { name, email, phone, address, batch, status } = req.body;
 
     // 1. Duplicate Check
-    const existingStudent = await Student.findOne({ email });
+    const existingStudent = await Student.findOne({
+      email: email.toLowerCase().trim(),
+    });
     if (existingStudent) {
       return res.status(400).json({
         success: false,
@@ -21,6 +25,8 @@ const addStudent = async (req, res, next) => {
       phone,
       address,
       batch,
+      // 🌟 FIXED: Passing phone number directly as default password for portal login
+      password: phone,
       status: status || "Active",
       category: "REGISTERED",
     });
@@ -30,7 +36,14 @@ const addStudent = async (req, res, next) => {
     // 🚀 3. Live Email Trigger from separate clean template file
     try {
       const emailSubject = "Welcome to JavaGurukul! 🎉 Portal Account Created";
-      const emailHtmlContent = getStudentRegistrationTemplate(name, batch);
+
+      // 🌟 FIXED: Sent all required arguments (name, batch, email, phone) to the updated premium template
+      const emailHtmlContent = getStudentRegistrationTemplate(
+        name,
+        batch,
+        email,
+        phone,
+      );
 
       await sendEmail({
         to: email,
@@ -40,12 +53,14 @@ const addStudent = async (req, res, next) => {
       console.log(`📧 Separate Template Mail sent successfully to: ${email}`);
     } catch (mailError) {
       console.error("🚨 Email triggering issue:", mailError.message);
+      // Not returning error here so that student is still considered registered in DB even if email fails
     }
 
     // 4. Success Response
     return res.status(201).json({
       success: true,
-      message: "Student registered successfully!",
+      message:
+        "Student registered successfully & login credentials sent via Email!",
       data: newStudent,
     });
   } catch (error) {
