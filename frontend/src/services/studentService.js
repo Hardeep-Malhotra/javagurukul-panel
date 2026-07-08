@@ -1,7 +1,12 @@
+// 📄 frontend/src/services/studentService.js
 import axios from "axios";
 
-// Backend base URL
-const API_URL = "http://localhost:5000/api/students";
+// Backend base URL (Ensure this matches your server port entry precisely)
+const API_URL = "http://localhost:5000/api/student";
+
+// ==========================================
+// 🛡️ ADMIN PANEL OPERATION METHODS
+// ==========================================
 
 // 1. Add Student
 export const addStudent = async (studentData) => {
@@ -11,7 +16,7 @@ export const addStudent = async (studentData) => {
 
 // 2. Get Students by Category Tab (REGISTERED, ENROLLED, UNENROLLED)
 export const getStudentsByTab = async (category) => {
-  const response = await axios.get(`${API_URL}/tab/${category.toLowerCase()}`);
+  const response = await axios.get(`${API_URL}/tab/${category.toUpperCase()}`); // URL case matches standard enum tags
   return response.data;
 };
 
@@ -39,8 +44,30 @@ export const deleteStudent = async (id) => {
   return response.data;
 };
 
-//  7. Check Email Availability (Live Unique Check)
+// 7. Check Email Availability (Live Unique Check)
 export const checkEmailAvailability = async (email) => {
   const response = await axios.post(`${API_URL}/check-email`, { email });
+  return response.data;
+};
+
+// ==========================================
+// 🔓 NEW: STUDENT PORTAL OPERATION METHODS
+// ==========================================
+
+// 8. Student Portal Auth Login Gateway
+export const loginStudent = async (email, password) => {
+  const response = await axios.post(`${API_URL}/login`, { email, password });
+  return response.data;
+};
+
+// 9. Fetch Assigned Batch Video Lectures Mapped Pipeline
+
+export const getBatchVideos = async (batchName) => {
+  const response = await axios.get(
+    `${API_URL}/my-batch-videos/${encodeURIComponent(batchName)}`,
+    {
+      withCredentials: true,
+    },
+  );
   return response.data;
 };
