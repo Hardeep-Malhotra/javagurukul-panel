@@ -10,6 +10,7 @@ const unenrollStudent = require("../controllers/student/unenrollStudent");
 const updateStatus = require("../controllers/student/updateStatus");
 const deleteStudent = require("../controllers/student/deleteStudent");
 const { checkEmailExists } = require("../controllers/student/checkEmail");
+const { verifyStudent } = require("../middleware/studentAuth");
 
 // 2. Import New Student Portal Controllers & Middleware
 const { studentLogin } = require("../controllers/student/studentLogin");
@@ -26,7 +27,7 @@ const Video = require("../models/VideoAccess"); // Schema model mapping for vide
 router.post("/login", studentLoginLimiter, studentLogin);
 
 // 🌟 Route 2: Fetch Student's Assigned Batch Video Lectures Pipeline
-router.get("/my-batch-videos/:batchName", async (req, res) => {
+router.get("/my-batch-videos/:batchName", verifyStudent, async (req, res) => {
   try {
     const { batchName } = req.params;
 
