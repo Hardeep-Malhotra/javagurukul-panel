@@ -6,17 +6,14 @@ const authRoutes = require("../Auth.route");
 const studentRoutes = require("../student.route");
 const demoClassRoutes = require("../demoClass.route");
 const videoAccess = require("../videoAccess.route");
-
-// 🌟 NEW IMPORT: Batch Routes File ko link kiya
+const notesRoutes = require("../notes.route.js");
 const batchRoutes = require("../batch.route.js");
 
 // 🛣️ Base Middleware Pipelines Setup
 router.use("/auth", authRoutes);
-router.use("/students", studentRoutes); // 🌟 Tumhara saara student logic /api/students par mapped hai
+router.use("/students", studentRoutes);
 router.use("/demo-classes", demoClassRoutes);
 router.use("/video-access", videoAccess);
-
-// 🌟 NEW ROUTE REGISTERED: Batches ka base path set kiya
 router.use("/batches", batchRoutes);
-
+router.use("/notes", notesRoutes);
 module.exports = router;
