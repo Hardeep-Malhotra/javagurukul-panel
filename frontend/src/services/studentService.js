@@ -84,3 +84,15 @@ export const getVideoAccess = async (videoId) => {
     throw error;
   }
 };
+
+// Saving  new batch
+export const createBatchAPI = async (batchData) => {
+  const response = await axios.post("http://localhost:5000/api/batches/add", batchData);
+  return response.data;
+};
+
+// for show all batches
+export const fetchAllBatchesAPI = async () => {
+  const response = await axios.get("http://localhost:5000/api/batches/all");
+  return response.data;
+};

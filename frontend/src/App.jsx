@@ -11,6 +11,7 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import StudentManagement from "./pages/StudentManagement";
 import AdminLayout from "./components/Layout/AdminLayout";
+import BatchManagement from "./pages/BatchManagement"; // 🌟 1. NEW IMPORT: Batch component ko link kiya
 
 // 🎓 Student Portal Components Imports
 import StudentLogin from "./pages/student/StudentLogin";
@@ -33,7 +34,6 @@ const ProtectedRoute = ({ children }) => {
 // ==========================================
 const StudentProtectedRoute = ({ children }) => {
   const { student } = useStudentAuth();
-  // Agar student state null hai (Logged out), toh direct login panel par bhej do
   return student ? children : <Navigate to="/student/login" />;
 };
 
@@ -45,14 +45,10 @@ const StudentLayout = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#f4f7f9]">
-      {/* Fixed Top Grid Navbar */}
       <StudentNavbar />
-
-      {/* Main Body content with responsive panel sidebar */}
       <div className="flex flex-col md:flex-row flex-1">
         <StudentSidebar activeTab={activeTab} setActiveTab={setActiveTab} />
         <main className="flex-1 p-4 sm:p-6 md:p-8">
-          {/* React Router Context helps relaying state variables to nested PortalHome views */}
           <Outlet context={{ activeTab }} />
         </main>
       </div>
@@ -81,15 +77,15 @@ const App = () => {
         >
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/students" element={<StudentManagement />} />
+          {/* 🌟 2. NEW NESTED ADMIN ROUTE ADDED HERE */}
+          <Route path="/admin/batches" element={<BatchManagement />} />
         </Route>
 
         {/* ==================================
             🎓 STUDENT PORTAL ENDPOINTS
            ================================== */}
-        {/* Public Login Gateway Gate */}
         <Route path="/student/login" element={<StudentLogin />} />
 
-        {/* Protected Inner System Interface View Elements */}
         <Route
           element={
             <StudentProtectedRoute>
@@ -97,7 +93,6 @@ const App = () => {
             </StudentProtectedRoute>
           }
         >
-          {/* Mapped inside Layout context view index element */}
           <Route path="/student/portal" element={<PortalHome />} />
         </Route>
 
@@ -105,6 +100,7 @@ const App = () => {
           path="/student/watch/:videoId"
           element={<StudentVideoPlayer />}
         />
+
         {/* 🔄 Wildcard Fallback Router Catch */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

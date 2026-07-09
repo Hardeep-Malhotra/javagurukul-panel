@@ -1,9 +1,10 @@
 // 📄 src/components/Students/AddStudentModal.jsx
-import { useState } from "react";
-import { Modal, Form, Input, Select, Button, message, Spin } from "antd"; // 👈 Spin component import kiya
+import { useState, useEffect } from "react";
+import { Modal, Form, Input, Select, Button, message, Spin } from "antd";
 import {
   addStudent,
   checkEmailAvailability,
+  fetchAllBatchesAPI, // 🌟 Imported batch fetch service
 } from "../../services/studentService";
 
 const { Option } = Select;
@@ -11,6 +12,30 @@ const { Option } = Select;
 const AddStudentModal = ({ visible, onClose, onSuccess }) => {
   const [form] = Form.useForm();
   const [submitting, setSubmitting] = useState(false);
+  const [batches, setBatches] = useState([]); // 🌟 Dynamic batches state
+  const [loadingBatches, setLoadingBatches] = useState(false);
+
+  // 🌟 Live database se batches load karne ka logic
+  useEffect(() => {
+    if (visible) {
+      const loadBatches = async () => {
+        try {
+          setLoadingBatches(true);
+          const res = await fetchAllBatchesAPI();
+          if (res.success) {
+            setBatches(res.data);
+          }
+        } catch (err) {
+          console.log(err);
+
+          message.error("Failed to fetch live batches lookup configuration.");
+        } finally {
+          setLoadingBatches(false);
+        }
+      };
+      loadBatches();
+    }
+  }, [visible]);
 
   const handleSubmit = async (values) => {
     setSubmitting(true);
@@ -27,9 +52,33 @@ const AddStudentModal = ({ visible, onClose, onSuccess }) => {
       }
     } catch (error) {
       console.log(error);
-      message.error(
-        error.response?.data?.message || "Failed to add student. Try again!",
-      );
+
+      // 🌟 REQUIREMENT 5: Capacity Full Handling via AntD Error Popup
+      const errMsg = error.response?.data?.message || "";
+      if (
+        error.response?.status === 400 &&
+        errMsg.toLowerCase().includes("capacity")
+      ) {
+        Modal.error({
+          title: (
+            <span className="text-red-600 font-extrabold text-lg">
+              ❌ Batch Capacity Full
+            </span>
+          ),
+          centered: true,
+          content: (
+            <div className="text-gray-600 font-medium text-sm mt-2">
+              <p>This batch has reached its maximum capacity.</p>
+              <p className="mt-1">
+                Please create a new batch or select another active configuration
+                slot.
+              </p>
+            </div>
+          ),
+        });
+      } else {
+        message.error(errMsg || "Failed to add student. Try again!");
+      }
     } finally {
       setSubmitting(false);
     }
@@ -55,12 +104,13 @@ const AddStudentModal = ({ visible, onClose, onSuccess }) => {
       closable={!submitting}
       maskClosable={!submitting}
     >
-      {/* 🚀 MAGIC SPIN WRAPPER: Yeh poore form ke upar ek top-class professional overlay loader chalayega */}
       <Spin
-        spinning={submitting}
+        spinning={submitting || loadingBatches}
         tip={
           <span className="font-bold mt-2 block" style={{ color: "#fb991d" }}>
-            Student Adding in Progress...
+            {loadingBatches
+              ? "Syncing Batch Registries..."
+              : "Student Adding in Progress..."}
           </span>
         }
         size="large"
@@ -145,6 +195,7 @@ const AddStudentModal = ({ visible, onClose, onSuccess }) => {
             />
           </Form.Item>
 
+          {/* 🌟 REQUIREMENT 4 & 6: Dynamic Dropdown With Live Counts */}
           <Form.Item
             label="Assign Batch"
             name="batch"
@@ -156,18 +207,16 @@ const AddStudentModal = ({ visible, onClose, onSuccess }) => {
             ]}
           >
             <Select size="large" placeholder="Select admission batch">
-              <Option value="JANUARY">JANUARY BATCH</Option>
-              <Option value="FEBRUARY">FEBRUARY BATCH</Option>
-              <Option value="MARCH">MARCH BATCH</Option>
-              <Option value="APRIL">APRIL BATCH</Option>
-              <Option value="MAY">MAY BATCH</Option>
-              <Option value="JUNE">JUNE BATCH</Option>
-              <Option value="JULY">JULY BATCH</Option>
-              <Option value="AUGUST">AUGUST BATCH</Option>
-              <Option value="SEPTEMBER">SEPTEMBER BATCH</Option>
-              <Option value="OCTOBER">OCTOBER BATCH</Option>
-              <Option value="NOVEMBER">NOVEMBER BATCH</Option>
-              <Option value="DECEMBER">DECEMBER BATCH</Option>
+              {batches.map((b) => {
+                const currentCount = b.currentStudentsCount || 0;
+                const isFull = currentCount >= b.capacity;
+                return (
+                  <Option key={b._id} value={b.batchName}>
+                    {b.batchName} ({currentCount} / {b.capacity} Students)
+                    {isFull ? " — [Full]" : ""}
+                  </Option>
+                );
+              })}
             </Select>
           </Form.Item>
 
