@@ -41,7 +41,7 @@ router.get("/my-batch-videos/:batchName", verifyStudent, async (req, res) => {
 
     // Checking if requested batch name exists inside the video assignedBatches tags
     const sharedVideos = await Video.find({ assignedBatches: batchName }).sort({
-      createdAt: -1,
+      createdAt: 1,
     });
 
     return res.status(200).json({
