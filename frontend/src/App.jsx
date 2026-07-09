@@ -17,6 +17,7 @@ import StudentLogin from "./pages/student/StudentLogin";
 import PortalHome from "./pages/student/PortalHome";
 import StudentNavbar from "./components/StudentPortal/StudentNavbar";
 import StudentSidebar from "./components/StudentPortal/StudentSidebar";
+import StudentVideoPlayer from "./pages/student/StudentVideoPlayer";
 import { useStudentAuth } from "./context/StudentAuthContext";
 
 // ==========================================
@@ -100,6 +101,10 @@ const App = () => {
           <Route path="/student/portal" element={<PortalHome />} />
         </Route>
 
+        <Route
+          path="/student/watch/:videoId"
+          element={<StudentVideoPlayer />}
+        />
         {/* 🔄 Wildcard Fallback Router Catch */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

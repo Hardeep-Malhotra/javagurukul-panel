@@ -71,3 +71,16 @@ export const getBatchVideos = async (batchName) => {
   );
   return response.data;
 };
+
+export const getVideoAccess = async (videoId) => {
+  try {
+    const response = await axios.get(`${API_URL}/video-access/${videoId}`, {
+      withCredentials: true,
+    });
+
+    return response.data;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+};
