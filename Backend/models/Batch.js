@@ -14,7 +14,7 @@ const BatchSchema = new mongoose.Schema(
       required: [true, "Batch capacity is required."],
       min: [1, "Capacity must be at least 1."],
     },
-    currentStudentCount: {
+    currentStudentsCount: {
       type: Number,
       default: 0,
     },

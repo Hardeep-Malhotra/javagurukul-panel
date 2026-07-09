@@ -1,66 +1,45 @@
-// 📄 Backend/controllers/student/addStudent.js
+// 📄 Backend/controllers/student/addStudent.js (Ya jo bhi aapka student create controller hai)
 const Student = require("../../models/Student");
-const sendEmail = require("../../utils/sendEmail");
-const getStudentRegistrationTemplate = require("../../utils/emailTemplates/studentRegisterTemplate");
+const Batch = require("../../models/Batch"); // 🌟 Batch model ko import karo
 
 const addStudent = async (req, res, next) => {
   try {
     const { name, email, phone, address, batch, status } = req.body;
 
-    // 1. Duplicate Check
-    const existingStudent = await Student.findOne({
-      email: email.toLowerCase().trim(),
-    });
-    if (existingStudent) {
-      return res.status(400).json({
-        success: false,
-        message: "Student already registered with this email",
-      });
+    // 1. Pehle check karo batch valid hai ya nahi aur full toh nahi hai
+    // Hum batchName se search kar rahe hain kyunki modal batchName bhej raha hai
+    const targetBatch = await Batch.findOne({ batchName: batch });
+    if (!targetBatch) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Selected batch not found." });
     }
 
-    // 2. Student Creation
+    if (targetBatch.currentStudentsCount >= targetBatch.capacity) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Batch capacity is full!" });
+    }
+
+    // 2. Student ko create karo
     const newStudent = new Student({
       name,
       email,
       phone,
       address,
-      batch,
-      // 🌟 FIXED: Passing phone number directly as default password for portal login
-      password: phone,
-      status: status || "Active",
-      category: "REGISTERED",
+      batch, // pure string mapping format
+      status,
     });
-
     await newStudent.save();
 
-    // 🚀 3. Live Email Trigger from separate clean template file
-    try {
-      const emailSubject = "Welcome to JavaGurukul! 🎉 Portal Account Created";
+    // 🌟 MAGIC LINE: Isi batch ka currentStudentsCount atomic tareeke se +1 badhao
+    await Batch.findByIdAndUpdate(targetBatch._id, {
+      $inc: { currentStudentsCount: 1 },
+    });
 
-      // 🌟 FIXED: Sent all required arguments (name, batch, email, phone) to the updated premium template
-      const emailHtmlContent = getStudentRegistrationTemplate(
-        name,
-        batch,
-        email,
-        phone,
-      );
-
-      await sendEmail({
-        to: email,
-        subject: emailSubject,
-        html: emailHtmlContent,
-      });
-      console.log(`📧 Separate Template Mail sent successfully to: ${email}`);
-    } catch (mailError) {
-      console.error("🚨 Email triggering issue:", mailError.message);
-      // Not returning error here so that student is still considered registered in DB even if email fails
-    }
-
-    // 4. Success Response
     return res.status(201).json({
       success: true,
-      message:
-        "Student registered successfully & login credentials sent via Email!",
+      message: "Student added successfully and batch matrix updated!",
       data: newStudent,
     });
   } catch (error) {
