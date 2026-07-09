@@ -27,7 +27,6 @@ const AddStudentModal = ({ visible, onClose, onSuccess }) => {
           }
         } catch (err) {
           console.log(err);
-
           message.error("Failed to fetch live batches lookup configuration.");
         } finally {
           setLoadingBatches(false);
@@ -195,7 +194,7 @@ const AddStudentModal = ({ visible, onClose, onSuccess }) => {
             />
           </Form.Item>
 
-          {/* 🌟 REQUIREMENT 4 & 6: Dynamic Dropdown With Live Counts */}
+          {/* 🌟 UPGRADED DROPDOWN: Filters active and safely blocks full batches */}
           <Form.Item
             label="Assign Batch"
             name="batch"
@@ -207,16 +206,20 @@ const AddStudentModal = ({ visible, onClose, onSuccess }) => {
             ]}
           >
             <Select size="large" placeholder="Select admission batch">
-              {batches.map((b) => {
-                const currentCount = b.currentStudentsCount || 0;
-                const isFull = currentCount >= b.capacity;
-                return (
-                  <Option key={b._id} value={b.batchName}>
-                    {b.batchName} ({currentCount} / {b.capacity} Students)
-                    {isFull ? " — [Full]" : ""}
-                  </Option>
-                );
-              })}
+              {batches
+                .filter((b) => b.status === "Active") // 👈 1. Inactive batches ko list se chupaya
+                .map((b) => {
+                  const currentCount = b.currentStudentsCount || 0;
+                  const isFull = currentCount >= b.capacity;
+                  return (
+                    <Option key={b._id} value={b.batchName} disabled={isFull}>
+                      {" "}
+                      {/* 👈 2. Full batches ko click hone se block kiya */}
+                      {b.batchName} ({currentCount} / {b.capacity} Students)
+                      {isFull ? " — [FULL]" : ""}
+                    </Option>
+                  );
+                })}
             </Select>
           </Form.Item>
 

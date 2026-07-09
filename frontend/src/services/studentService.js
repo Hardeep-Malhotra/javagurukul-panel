@@ -87,12 +87,30 @@ export const getVideoAccess = async (videoId) => {
 
 // Saving  new batch
 export const createBatchAPI = async (batchData) => {
-  const response = await axios.post("http://localhost:5000/api/batches/add", batchData);
+  const response = await axios.post(
+    "http://localhost:5000/api/batches/add",
+    batchData,
+  );
   return response.data;
 };
 
 // for show all batches
 export const fetchAllBatchesAPI = async () => {
   const response = await axios.get("http://localhost:5000/api/batches/all");
+  return response.data;
+};
+
+export const updateBatchAPI = async (id, batchData) => {
+  const response = await axios.put(
+    `http://localhost:5000/api/batches/edit/${id}`,
+    batchData,
+  );
+  return response.data;
+};
+
+export const deleteBatchAPI = async (id) => {
+  const response = await axios.delete(
+    `http://localhost:5000/api/batches/delete/${id}`,
+  );
   return response.data;
 };
