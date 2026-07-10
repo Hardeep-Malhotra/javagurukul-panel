@@ -1,65 +1,99 @@
+// 📄 Backend/controllers/AINotes/generateNotes.js
+
 const LectureNotes = require("../../models/LectureNotes");
 const transcriptService = require("../../services/transcriptService");
 const aiService = require("../../services/aiService");
 
-const generateNotes = async (req, res) => {
+/**
+ * Background AI Notes Generator
+ * Admin response ko block nahi karega.
+ */
+const generateAiNotesBackground = async (
+  youtubeVideoId,
+  videoTitle,
+  youtubeUrl,
+) => {
+  let notesDocument;
+
   try {
-    const { youtubeUrl, videoTitle } = req.body;
-
-    if (!youtubeUrl) {
-      return res.status(400).json({
-        success: false,
-        message: "YouTube URL is required.",
-      });
-    }
-
-    // Extract Transcript
-    const { youtubeVideoId, transcript } =
-      await transcriptService.getTranscript(youtubeUrl);
-
-    // Cache Check
+    // Check if notes already exist
     const existingNotes = await LectureNotes.findOne({
       youtubeVideoId,
     });
 
     if (existingNotes) {
-      return res.status(200).json({
-        success: true,
-        cached: true,
-        data: existingNotes,
-      });
+      console.log(`[AI Engine] Notes already exist for ${youtubeVideoId}`);
+      return;
+    }
+
+    // Create initial document (or reuse if already exists)
+    notesDocument = await LectureNotes.findOneAndUpdate(
+      { youtubeVideoId },
+      {
+        $setOnInsert: {
+          youtubeVideoId,
+          videoTitle,
+          youtubeUrl,
+          transcript: "Fetching transcript...",
+          shortSummary: "Generating summary...",
+          detailedNotes: "Generating detailed notes...",
+          keyPoints: [],
+          importantDefinitions: [],
+          aiModel: process.env.OLLAMA_MODEL || "gemma3:4b",
+          status: "processing",
+        },
+      },
+      {
+        upsert: true,
+        new: true,
+      },
+    );
+    console.log("Created/Found Notes ID:", notesDocument._id);
+
+    console.log(`[AI Engine] Processing started for ${youtubeVideoId}`);
+
+    // Fetch transcript
+    const { transcript } = await transcriptService.getTranscript(youtubeUrl);
+
+    if (!transcript || transcript.trim() === "") {
+      throw new Error("Transcript not found.");
     }
 
     // Generate AI Notes
-    const aiResult = await aiService.generateNotesFromTranscript(transcript);
+    const aiData = await aiService.generateNotesFromTranscript(transcript);
 
-    // Save Notes
-    const lectureNotes = await LectureNotes.create({
-      youtubeVideoId,
-      videoTitle,
-      youtubeUrl,
-      transcript,
-      shortSummary: aiResult.shortSummary,
-      detailedNotes: aiResult.detailedNotes,
-      keyPoints: aiResult.keyPoints,
-      importantDefinitions: aiResult.importantDefinitions,
-      aiModel: aiResult.aiModel,
-      status: "completed",
-    });
-
-    return res.status(201).json({
-      success: true,
-      cached: false,
-      data: lectureNotes,
-    });
+    // Update database directly
+    await LectureNotes.findOneAndUpdate(
+      { youtubeVideoId },
+      {
+        transcript,
+        shortSummary: aiData.shortSummary,
+        detailedNotes: aiData.detailedNotes,
+        keyPoints: aiData.keyPoints || [],
+        importantDefinitions: aiData.importantDefinitions || [],
+        aiModel: aiData.aiModel,
+        status: "completed",
+        errorMessage: "",
+      },
+    );
+    console.log(
+      `[AI Engine] Notes generated successfully for ${youtubeVideoId}`,
+    );
   } catch (error) {
-    console.error(error);
+    console.error(`[AI Engine Error] ${youtubeVideoId}:`, error.message);
 
-    return res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+    if (notesDocument) {
+      await LectureNotes.findOneAndUpdate(
+        { youtubeVideoId },
+        {
+          status: "failed",
+          errorMessage: error.message,
+        },
+      );
+    }
   }
 };
 
-module.exports = generateNotes;
+module.exports = {
+  generateAiNotesBackground,
+};

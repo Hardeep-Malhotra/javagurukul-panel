@@ -1,6 +1,8 @@
 // 📄 Backend/controllers/student/addStudent.js (Ya jo bhi aapka student create controller hai)
 const Student = require("../../models/Student");
-const Batch = require("../../models/Batch"); // 🌟 Batch model ko import karo
+const Batch = require("../../models/Batch");
+const sendEmail = require("../../utils/sendEmail");
+const studentWelcomeTemplate = require("../../utils/emailTemplates/studentRegisterTemplate");
 
 const addStudent = async (req, res, next) => {
   try {
@@ -31,6 +33,24 @@ const addStudent = async (req, res, next) => {
       status,
     });
     await newStudent.save();
+    // 🌟 STEP 1: Mongoose document ko plain JS object me convert karo taaki data clean nikle
+    const studentData = newStudent.toObject();
+
+    try {
+      await sendEmail({
+        to: email,
+        subject: "Welcome to Java Gurukul 🎉",
+        html: studentWelcomeTemplate({
+          studentName: String(name), // Matches template key
+          batchName: String(batch), // Matches template key (batchName)
+          studentEmail: String(email), // Matches template key
+          studentPhone: String(phone), // Matches template key
+        }),
+      });
+      console.log(`✉️ Welcome email dispatched successfully to: ${email}`);
+    } catch (emailError) {
+      console.error("Email Error:", emailError.message);
+    }
 
     // 🌟 MAGIC LINE: Isi batch ka currentStudentsCount atomic tareeke se +1 badhao
     await Batch.findByIdAndUpdate(targetBatch._id, {

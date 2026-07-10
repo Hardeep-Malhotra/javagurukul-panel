@@ -2,17 +2,14 @@
 
 /**
  * Ultra-Premium JavaGurukul Student Registration HTML Email Template
- * @param {String} studentName - Name of the registered student
- * @param {String} batchName - Batch assigned to the student
- * @param {String} studentEmail - Login Email
- * @param {String} studentPhone - Login Password (Phone Number)
+ * 🌟 FIXED: Added Destructuring Braces {} in params to receive data from object fields perfectly
  */
-const getStudentRegistrationTemplate = (
+const getStudentRegistrationTemplate = ({
   studentName,
   batchName,
   studentEmail,
   studentPhone,
-) => {
+}) => {
   return `
     <!DOCTYPE html>
     <html lang="en">
@@ -31,18 +28,15 @@ const getStudentRegistrationTemplate = (
     </head>
     <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f4f7f9; margin: 0; padding: 0; -webkit-font-smoothing: antialiased;">
 
-        <!-- Outer Wrapper -->
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #f4f7f9; padding: 30px 0;">
             <tr>
                 <td align="center">
                     <table class="container" role="presentation" width="100%" style="max-width: 600px; background-color: #ffffff; border-radius: 16px; box-shadow: 0 10px 30px rgba(20, 33, 42, 0.05); overflow: hidden; border: 1px solid #eef2f5;" cellspacing="0" cellpadding="0" border="0">
                         
-                        <!-- Top Theme Bar -->
                         <tr>
                             <td style="background: linear-gradient(90deg, #14212a 0%, #17647e 50%, #fb991d 100%); height: 6px; line-height: 6px; font-size: 0;">&nbsp;</td>
                         </tr>
 
-                        <!-- 🎓 Logo Section -->
                         <tr>
                             <td align="center" style="padding: 30px 20px 20px 20px; background-color: #ffffff;">
                                 <img src="https://res.cloudinary.com/dsc4cqkdd/image/upload/v1782110343/java-gurukul-logo_ek2ial.png" 
@@ -55,7 +49,6 @@ const getStudentRegistrationTemplate = (
                             </td>
                         </tr>
 
-                        <!-- 🎉 Welcome Hero Banner -->
                         <tr>
                             <td class="hero-bg" align="center" style="background: linear-gradient(135deg, #14212a 0%, #1c3242 100%); padding: 40px 30px; text-align: center;">
                                 <h1 style="color: #ffffff; margin: 0 0 10px 0; font-size: 26px; font-weight: 800; letter-spacing: -0.5px; line-height: 1.2;">
@@ -67,11 +60,9 @@ const getStudentRegistrationTemplate = (
                             </td>
                         </tr>
 
-                        <!-- Main Content Body -->
                         <tr>
                             <td class="content-padding" style="padding: 40px 35px; background-color: #ffffff;">
                                 
-                                <!-- 👤 Student Details Card -->
                                 <h3 style="color: #14212a; font-size: 15px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin: 0 0 12px 0;">
                                     👤 Student Profile Summary
                                 </h3>
@@ -92,7 +83,6 @@ const getStudentRegistrationTemplate = (
                                     </tr>
                                 </table>
 
-                                <!-- 🔐 Login Credentials Card -->
                                 <h3 style="color: #14212a; font-size: 15px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin: 0 0 12px 0;">
                                     🔐 Access Credentials
                                 </h3>
@@ -105,25 +95,22 @@ const getStudentRegistrationTemplate = (
                                         <td style="font-size: 14px; color: #5d6971;"><strong>📱 Default Password:</strong></td>
                                         <td style="font-size: 14px; color: #14212a; font-weight: 600;">
                                             <code>${studentPhone}</code> 
-                                            <span style="color: #7ee0a3; font-size: 12px; display: block; margin-top: 2px; font-weight: normal; color: #a16207;">(Your Registered Phone Number)</span>
+                                            <span style="color: #fb991d; font-size: 12px; display: block; margin-top: 2px; font-weight: normal; color: #a16207;">(Your Registered Phone Number)</span>
                                         </td>
                                     </tr>
                                 </table>
 
-                                <!-- 🚀 Student Portal Features -->
                                 <h3 style="color: #14212a; font-size: 15px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin: 0 0 15px 0; text-align: center;">
                                     🚀 Unlock Your Student Portal Features
                                 </h3>
                                 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-bottom: 35px;">
                                     <tr>
-                                        <!-- Feature 1 -->
                                         <td class="feature-box" width="48%" style="background-color: #ffffff; border: 1px solid #eaf0f6; border-radius: 10px; padding: 15px; text-align: left; vertical-align: top;">
                                             <span style="font-size: 20px; display: block; margin-bottom: 5px;">🎥</span>
                                             <strong style="color: #14212a; font-size: 14px; display: block;">Video Lectures</strong>
                                             <span style="color: #718096; font-size: 12px; line-height: 1.4; display: block; margin-top: 3px;">High-quality recorded dashboard modules streaming exclusively for your batch code.</span>
                                         </td>
                                         <td width="4%">&nbsp;</td>
-                                        <!-- Feature 2 -->
                                         <td class="feature-box" width="48%" style="background-color: #ffffff; border: 1px solid #eaf0f6; border-radius: 10px; padding: 15px; text-align: left; vertical-align: top;">
                                             <span style="font-size: 20px; display: block; margin-bottom: 5px;">📚</span>
                                             <strong style="color: #14212a; font-size: 14px; display: block;">Study Material</strong>
@@ -132,14 +119,12 @@ const getStudentRegistrationTemplate = (
                                     </tr>
                                     <tr><td style="font-size: 12px; line-height: 12px;">&nbsp;</td></tr>
                                     <tr>
-                                        <!-- Feature 3 -->
                                         <td class="feature-box" width="48%" style="background-color: #ffffff; border: 1px solid #eaf0f6; border-radius: 10px; padding: 15px; text-align: left; vertical-align: top;">
                                             <span style="font-size: 20px; display: block; margin-bottom: 5px;">📢</span>
                                             <strong style="color: #14212a; font-size: 14px; display: block;">Notifications</strong>
                                             <span style="color: #718096; font-size: 12px; line-height: 1.4; display: block; margin-top: 3px;">Real-time announcements alerts tracking schedule variations instantly.</span>
                                         </td>
                                         <td width="4%">&nbsp;</td>
-                                        <!-- Feature 4 -->
                                         <td class="feature-box" width="48%" style="background-color: #ffffff; border: 1px solid #eaf0f6; border-radius: 10px; padding: 15px; text-align: left; vertical-align: top;">
                                             <span style="font-size: 20px; display: block; margin-bottom: 5px;">📈</span>
                                             <strong style="color: #14212a; font-size: 14px; display: block;">Learning Progress</strong>
@@ -148,7 +133,6 @@ const getStudentRegistrationTemplate = (
                                     </tr>
                                 </table>
 
-                                <!-- 🧡 Action Button -->
                                 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
                                     <tr>
                                         <td align="center">
@@ -159,7 +143,6 @@ const getStudentRegistrationTemplate = (
                                     </tr>
                                 </table>
 
-                                <!-- 🔒 Security Notice -->
                                 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-top: 35px; border-top: 1px dashed #e2e8f0; padding-top: 20px;">
                                     <tr>
                                         <td>
@@ -173,7 +156,6 @@ const getStudentRegistrationTemplate = (
                             </td>
                         </tr>
 
-                        <!-- 📞 Support Section & Footer -->
                         <tr>
                             <td style="background-color: #fbfcfd; padding: 30px 40px; text-align: center; border-top: 1px solid #eef1f4;">
                                 <p style="color: #14212a; font-size: 13px; margin: 0 0 5px 0; font-weight: 700;">
@@ -183,7 +165,6 @@ const getStudentRegistrationTemplate = (
                                     If you run into any layout breaks or face authentication failures, contact your dedicated cohort mentor or reply directly to this mail desk.
                                 </p>
                                 
-                                <!-- © Professional Footer -->
                                 <p style="color: #a0aec0; font-size: 11px; margin: 0;">
                                     &copy; ${new Date().getFullYear()} <b>JavaGurukul Panel Matrix System</b>. All rights reserved.<br/>
                                     Designed globally compatible for Gmail, Apple Mail, Outlook and all mobile viewport resolutions.

@@ -3,7 +3,8 @@ const LectureNotes = require("../../models/LectureNotes");
 const getNotesByVideoId = async (req, res) => {
   try {
     const { youtubeVideoId } = req.params;
-
+    console.log("Checking existing notes for:", youtubeVideoId);
+    S;
     const notes = await LectureNotes.findOne({
       youtubeVideoId,
     });
