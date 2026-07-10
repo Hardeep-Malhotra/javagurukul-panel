@@ -4,10 +4,12 @@ import { useOutletContext } from "react-router-dom";
 import { useStudentAuth } from "../../context/StudentAuthContext";
 import { getBatchVideos } from "../../services/studentService";
 import VideoPlayCard from "../../components/StudentPortal/VideoPlayCard";
+// 🌟 1. Apne naye AI Notes Library component ko import karo
+import AiNotesLibrary from "./AiNotesLibrary";
 
 const PortalHome = () => {
   const { student } = useStudentAuth();
-  const { activeTab } = useOutletContext(); // 🌟 Layout context se activeTab pull kar liya
+  const { activeTab } = useOutletContext(); // Layout context se activeTab pull kar rahe hain
   const [videos, setVideos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -18,7 +20,6 @@ const PortalHome = () => {
       try {
         setLoading(true);
         setError("");
-        // Assigned batch logic verification pipeline trigger
         const response = await getBatchVideos(student.batch);
         if (response.success) {
           setVideos(response.data);
@@ -38,7 +39,14 @@ const PortalHome = () => {
     }
   }, [student, activeTab]);
 
-  // 🛡️ Conditional layout router if tab shifts to material or notices
+  /* =======================================================
+     🌟 2. NEW LOGIC RENDER: Agar AI Notes tab active hai
+     ======================================================= */
+  if (activeTab === "ai-notes") {
+    return <AiNotesLibrary />;
+  }
+
+  /* 🛡️ Conditional layout router if tab shifts to material or notices (Keep original look) */
   if (activeTab !== "lectures") {
     return (
       <div className="bg-white border border-dashed border-gray-200 p-12 text-center rounded-2xl max-w-4xl mx-auto mt-6">
@@ -54,6 +62,7 @@ const PortalHome = () => {
     );
   }
 
+  // 🎥 Default view layout remains 100% same for the "lectures" tab
   return (
     <div className="max-w-7xl mx-auto">
       {/* 🎉 Welcome Hero Card Banner */}
@@ -86,9 +95,7 @@ const PortalHome = () => {
         </span>
       </div>
 
-      {/* ==========================================
-          STATE VALIDATION RENDER PANELS
-         ========================================== */}
+      {/* STATE VALIDATION RENDER PANELS */}
       {loading && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {[1, 2, 3].map((skeleton) => (

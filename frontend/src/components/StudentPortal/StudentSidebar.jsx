@@ -5,6 +5,7 @@ const StudentSidebar = ({ activeTab, setActiveTab }) => {
     { id: "lectures", label: "Video Lectures", icon: "🎥" },
     { id: "material", label: "Study Material", icon: "📚" },
     { id: "notices", label: "Announcements", icon: "📢" },
+    { id: "ai-notes", label: "AI Notes", icon: "📄" },
   ];
 
   return (

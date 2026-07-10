@@ -37,6 +37,8 @@ const StudentProtectedRoute = ({ children }) => {
   return student ? children : <Navigate to="/student/login" />;
 };
 
+// 📄 frontend/src/App.jsx
+
 // ==========================================
 // 🎛️ STUDENT PORTAL STRUCTURE LAYOUT
 // ==========================================
@@ -49,7 +51,8 @@ const StudentLayout = () => {
       <div className="flex flex-col md:flex-row flex-1">
         <StudentSidebar activeTab={activeTab} setActiveTab={setActiveTab} />
         <main className="flex-1 p-4 sm:p-6 md:p-8">
-          <Outlet context={{ activeTab }} />
+          {/* 🌟 FIXED: activeTab ke saath setActiveTab bhi pass kar diya */}
+          <Outlet context={{ activeTab, setActiveTab }} />
         </main>
       </div>
     </div>
@@ -63,9 +66,7 @@ const App = () => {
   return (
     <Router>
       <Routes>
-        {/* ==================================
-            🔒 ADMIN PANEL ENDPOINTS
-           ================================== */}
+        {/* ... Admin Routes same rahenge ... */}
         <Route path="/" element={<Login />} />
 
         <Route
@@ -77,7 +78,6 @@ const App = () => {
         >
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/students" element={<StudentManagement />} />
-          {/* 🌟 2. NEW NESTED ADMIN ROUTE ADDED HERE */}
           <Route path="/admin/batches" element={<BatchManagement />} />
         </Route>
 
@@ -94,12 +94,11 @@ const App = () => {
           }
         >
           <Route path="/student/portal" element={<PortalHome />} />
+          <Route
+            path="/student/watch/:videoId"
+            element={<StudentVideoPlayer />}
+          />
         </Route>
-
-        <Route
-          path="/student/watch/:videoId"
-          element={<StudentVideoPlayer />}
-        />
 
         {/* 🔄 Wildcard Fallback Router Catch */}
         <Route path="*" element={<Navigate to="/" replace />} />

@@ -3,12 +3,17 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate, useOutletContext } from "react-router-dom";
 import { useStudentAuth } from "../../context/StudentAuthContext";
 import { getVideoAccess } from "../../services/studentService";
+import YouTube from "react-youtube"; // 🌟 React Youtube plugin wrapper for onEnd event
+import { Modal, message } from "antd";
 import axios from "axios";
 
 const StudentVideoPlayer = () => {
   const { videoId } = useParams();
   const navigate = useNavigate();
   const { student } = useStudentAuth();
+
+  // 🌟 Layout context se setActiveTab pull kar liya taaki popup click par direct navigation switch ho sake
+  const { setActiveTab } = useOutletContext() || {};
 
   const [currentVideo, setCurrentVideo] = useState(null);
   const [playlist, setPlaylist] = useState([]);
@@ -28,12 +33,9 @@ const StudentVideoPlayer = () => {
         }
 
         // 2. Playlist ke liye usi batch ki baaki saari videos bhi fetch kar lo
-        // 📄 frontend/src/pages/student/StudentVideoPlayer.jsx ke andar loadPlayerWorkspace check karo:
         const batchRes = await axios.get(
           `http://localhost:5000/api/students/my-batch-videos/${student.batch}`,
-          {
-            withCredentials: true,
-          },
+          { withCredentials: true },
         );
         if (batchRes.data.success) {
           setPlaylist(batchRes.data.data);
@@ -50,6 +52,97 @@ const StudentVideoPlayer = () => {
       loadPlayerWorkspace();
     }
   }, [videoId, student]);
+
+  /* =========================================================================
+     🌟 AI NOTES UX WORKFLOW TRIGGER ON VIDEO COMPLETION
+     ========================================================================= */
+  // 📄 frontend/src/pages/student/StudentVideoPlayer.jsx
+
+  const handleVideoComplete = async () => {
+    if (!currentVideo?.youtubeVideoId) return;
+
+    try {
+      // 1. Pehle check karo ki kya notes pehle se hain
+      const response = await axios.get(
+        `/api/notes/${currentVideo.youtubeVideoId}`,
+      );
+
+      if (response.data.success && response.data.data?.status === "completed") {
+        /* ✅ CASE 1: AI Notes ready hain */
+        Modal.success({
+          title: (
+            <span className="text-[#14212a] font-black text-lg">
+              🎉 Hi {student?.name || "Learner"},
+            </span>
+          ),
+          centered: true,
+          width: 460,
+          content: (
+            <div className="text-gray-600 font-semibold text-sm mt-2">
+              Your AI Notes for{" "}
+              <strong className="text-[#fb991d]">"{currentVideo.title}"</strong>{" "}
+              are ready.
+              <p className="mt-1 text-xs text-gray-400">
+                Please go to the AI Notes tab to read the notes.
+              </p>
+            </div>
+          ),
+          okText: "Go to AI Notes",
+          okButtonProps: {
+            style: { backgroundColor: "#14212a", borderColor: "#14212a" },
+            className: "font-bold rounded-lg",
+          },
+          onOk() {
+            setActiveTab("ai-notes"); // Yeh tabhi chalega jab sidebar/portal me "ai-notes" render ho raha ho
+            navigate("/student/portal");
+          },
+        });
+      } else {
+        /* ⏳ CASE 2: Status completed nahi hai, toh generate karne ka trigger bhejo */
+        triggerGenerationAndShowModal();
+      }
+    } catch (error) {
+      console.log(error);
+      /* 💥 CASE 3: Agar API ne 404 diya (Notes exist hi nahi karte), toh bhi generate karo */
+      triggerGenerationAndShowModal();
+    }
+  };
+
+  // 🌟 NAYA FUNCTION: Jo backend par generation api ko hit karega aur user ko batayega
+  const triggerGenerationAndShowModal = async () => {
+    try {
+      // Apne backend ke generate route ke mutabik is URL ko sahi kar lena (e.g., /api/notes/generate)
+      await axios.post(`/api/notes/generate`, {
+        videoId: currentVideo.youtubeVideoId,
+        title: currentVideo.title,
+      });
+
+      message.success("AI Generation started in the background!");
+    } catch (err) {
+      console.error("Failed to trigger AI generation", err);
+    }
+
+    // Modal toh dikhao hi dikhao taaki user wait kare
+    Modal.info({
+      title: (
+        <span className="text-[#14212a] font-black text-lg">
+          ⏳ AI Notes are being prepared
+        </span>
+      ),
+      centered: true,
+      content: (
+        <p className="font-semibold text-gray-500 mt-2">
+          We have triggered the AI engine to generate notes for{" "}
+          <strong>"{currentVideo.title}"</strong>. Please check the AI Notes
+          repository section in a few moments.
+        </p>
+      ),
+      okText: "Got It",
+      okButtonProps: {
+        style: { backgroundColor: "#fb991d", borderColor: "#fb991d" },
+      },
+    });
+  };
 
   if (loading) {
     return (
@@ -86,16 +179,24 @@ const StudentVideoPlayer = () => {
           &larr; Back to Dashboard
         </button>
 
-        {/* Professional YouTube Embed Iframe Wrapper */}
+        {/* Professional YouTube Embed React Framework Wrapper */}
         <div className="bg-black rounded-2xl aspect-video w-full overflow-hidden shadow-lg relative">
           {currentVideo?.youtubeVideoId ? (
-            <iframe
-              src={`https://www.youtube.com/embed/${currentVideo.youtubeVideoId}?rel=0&modestbranding=1`}
-              title={currentVideo.title}
-              className="w-full h-full border-0 absolute inset-0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-            ></iframe>
+            <YouTube
+              videoId={currentVideo.youtubeVideoId}
+              className="w-full h-full absolute inset-0"
+              containerClassName="w-full h-full"
+              opts={{
+                width: "100%",
+                height: "100%",
+                playerVars: {
+                  autoplay: 0,
+                  rel: 0,
+                  modestbranding: 1,
+                },
+              }}
+              onEnd={handleVideoComplete} // 🌟 Active trigger tracking pipeline
+            />
           ) : (
             <div className="text-white text-center flex items-center justify-center h-full">
               Invalid Video Stream ID

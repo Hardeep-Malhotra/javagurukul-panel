@@ -114,3 +114,17 @@ export const deleteBatchAPI = async (id) => {
   );
   return response.data;
 };
+
+/**
+ * Direct check if notes are ready for a video ID
+ */
+export const fetchVideoNotesStatusAPI = async (youtubeVideoId) => {
+  return await axios.get(`/api/notes/${youtubeVideoId}`);
+};
+
+/**
+ * Fetch all available ready notes for the Student Library
+ */
+export const fetchAllAvailableNotesAPI = async () => {
+  return await axios.get("/api/notes/all/lectures"); // Backend endpoint to get completed entries
+};
