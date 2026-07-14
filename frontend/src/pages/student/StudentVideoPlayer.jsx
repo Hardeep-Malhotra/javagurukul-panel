@@ -58,91 +58,94 @@ const StudentVideoPlayer = () => {
      ========================================================================= */
   // 📄 frontend/src/pages/student/StudentVideoPlayer.jsx
 
-  const handleVideoComplete = async () => {
-    if (!currentVideo?.youtubeVideoId) return;
+ const handleVideoComplete = async () => {
+  if (!currentVideo?.youtubeVideoId) return;
 
-    try {
-      // 1. Pehle check karo ki kya notes pehle se hain
-      const response = await axios.get(
-        `/api/notes/${currentVideo.youtubeVideoId}`,
-      );
+  try {
+    const response = await axios.get(
+      `http://localhost:5000/api/notes/${currentVideo.youtubeVideoId}`
+    );
 
-      if (response.data.success && response.data.data?.status === "completed") {
-        /* ✅ CASE 1: AI Notes ready hain */
-        Modal.success({
-          title: (
-            <span className="text-[#14212a] font-black text-lg">
-              🎉 Hi {student?.name || "Learner"},
-            </span>
-          ),
-          centered: true,
-          width: 460,
-          content: (
-            <div className="text-gray-600 font-semibold text-sm mt-2">
-              Your AI Notes for{" "}
-              <strong className="text-[#fb991d]">"{currentVideo.title}"</strong>{" "}
-              are ready.
-              <p className="mt-1 text-xs text-gray-400">
-                Please go to the AI Notes tab to read the notes.
-              </p>
-            </div>
-          ),
-          okText: "Go to AI Notes",
-          okButtonProps: {
-            style: { backgroundColor: "#14212a", borderColor: "#14212a" },
-            className: "font-bold rounded-lg",
-          },
-          onOk() {
-            setActiveTab("ai-notes"); // Yeh tabhi chalega jab sidebar/portal me "ai-notes" render ho raha ho
-            navigate("/student/portal");
-          },
-        });
-      } else {
-        /* ⏳ CASE 2: Status completed nahi hai, toh generate karne ka trigger bhejo */
-        triggerGenerationAndShowModal();
-      }
-    } catch (error) {
-      console.log(error);
-      /* 💥 CASE 3: Agar API ne 404 diya (Notes exist hi nahi karte), toh bhi generate karo */
-      triggerGenerationAndShowModal();
+    if (
+      response.data.success &&
+      response.data.data?.status === "completed"
+    ) {
+      Modal.success({
+        title: (
+          <span className="text-[#14212a] font-black text-lg">
+            🎉 Hi {student?.name}
+          </span>
+        ),
+        centered: true,
+        width: 460,
+        content: (
+          <div className="text-gray-600 font-semibold text-sm mt-2">
+            Notes of <strong>{currentVideo.title}</strong> are ready.
+
+            <p className="mt-2 text-xs text-gray-500">
+              Please go to AI Notes tab and read them.
+            </p>
+          </div>
+        ),
+        okText: "Go To AI Notes",
+
+        onOk() {
+          setActiveTab("ai-notes");
+          navigate("/student/portal");
+        },
+      });
+    } else {
+      Modal.info({
+        title: "⏳ AI Notes are still generating",
+        content:
+          "Please wait a little while. Notes will automatically appear inside the AI Notes tab.",
+      });
     }
-  };
+  } catch (err) {
+    console.error("Error checking AI notes status", err);
+    Modal.info({
+      title: "⏳ AI Notes are still generating",
+      content:
+        "Please wait a little while. Notes will automatically appear inside the AI Notes tab.",
+    });
+  }
+};
 
   // 🌟 NAYA FUNCTION: Jo backend par generation api ko hit karega aur user ko batayega
-  const triggerGenerationAndShowModal = async () => {
-    try {
-      // Apne backend ke generate route ke mutabik is URL ko sahi kar lena (e.g., /api/notes/generate)
-      await axios.post(`/api/notes/generate`, {
-        videoId: currentVideo.youtubeVideoId,
-        title: currentVideo.title,
-      });
+  // const triggerGenerationAndShowModal = async () => {
+  //   try {
+  //     // Apne backend ke generate route ke mutabik is URL ko sahi kar lena (e.g., /api/notes/generate)
+  //     await axios.post(`/api/notes/generate`, {
+  //       videoId: currentVideo.youtubeVideoId,
+  //       title: currentVideo.title,
+  //     });
 
-      message.success("AI Generation started in the background!");
-    } catch (err) {
-      console.error("Failed to trigger AI generation", err);
-    }
+  //     message.success("AI Generation started in the background!");
+  //   } catch (err) {
+  //     console.error("Failed to trigger AI generation", err);
+  //   }
 
-    // Modal toh dikhao hi dikhao taaki user wait kare
-    Modal.info({
-      title: (
-        <span className="text-[#14212a] font-black text-lg">
-          ⏳ AI Notes are being prepared
-        </span>
-      ),
-      centered: true,
-      content: (
-        <p className="font-semibold text-gray-500 mt-2">
-          We have triggered the AI engine to generate notes for{" "}
-          <strong>"{currentVideo.title}"</strong>. Please check the AI Notes
-          repository section in a few moments.
-        </p>
-      ),
-      okText: "Got It",
-      okButtonProps: {
-        style: { backgroundColor: "#fb991d", borderColor: "#fb991d" },
-      },
-    });
-  };
+  //   // Modal toh dikhao hi dikhao taaki user wait kare
+  //   Modal.info({
+  //     title: (
+  //       <span className="text-[#14212a] font-black text-lg">
+  //         ⏳ AI Notes are being prepared
+  //       </span>
+  //     ),
+  //     centered: true,
+  //     content: (
+  //       <p className="font-semibold text-gray-500 mt-2">
+  //         We have triggered the AI engine to generate notes for{" "}
+  //         <strong>"{currentVideo.title}"</strong>. Please check the AI Notes
+  //         repository section in a few moments.
+  //       </p>
+  //     ),
+  //     okText: "Got It",
+  //     okButtonProps: {
+  //       style: { backgroundColor: "#fb991d", borderColor: "#fb991d" },
+  //     },
+  //   });
+  // };
 
   if (loading) {
     return (

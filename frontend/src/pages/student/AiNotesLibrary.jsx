@@ -25,9 +25,13 @@ const AiNotesLibrary = () => {
     try {
       setLoading(true);
       const res = await fetchAllAvailableNotesAPI();
+      console.log("FULL RESPONSE", res);
+console.log("DATA", res.data);
+console.log("NOTES", res.data.data);
       if (res.data.success) {
         setNotesList(res.data.data);
       }
+      console.log("STATE", res.data.data.length);
     } catch (err) {
       console.error(err);
       message.error("Failed to compile repository matrix mapping.");
