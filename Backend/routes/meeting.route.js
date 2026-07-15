@@ -7,6 +7,7 @@ const router = express.Router();
 const createMeeting = require("../controllers/Meeting/createMeeting");
 const joinMeeting = require("../controllers/Meeting/joinMeeting");
 const startMeeting = require("../controllers/Meeting/startMeeting");
+const endMeeting = require("../controllers/Meeting/endMeeting");
 
 // Create Meeting
 router.post("/create", createMeeting);
@@ -16,4 +17,7 @@ router.post("/join", joinMeeting);
 
 // Start Meeting
 router.put("/start/:meetingId", startMeeting);
+
+// End Meeting
+router.put("/end/:meetingId", endMeeting);
 module.exports = router;
