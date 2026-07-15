@@ -1,5 +1,5 @@
 // 📄 frontend/src/App.jsx
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   BrowserRouter as Router,
   Routes,
@@ -20,6 +20,10 @@ import StudentNavbar from "./components/StudentPortal/StudentNavbar";
 import StudentSidebar from "./components/StudentPortal/StudentSidebar";
 import StudentVideoPlayer from "./pages/student/StudentVideoPlayer";
 import { useStudentAuth } from "./context/StudentAuthContext";
+import socket from "../src/socket"
+
+
+
 
 // ==========================================
 // 🛡️ ADMIN PANEL ROUTE GUARD
@@ -63,6 +67,26 @@ const StudentLayout = () => {
 // 🚀 MAIN APP ENGINE ROUTER
 // ==========================================
 const App = () => {
+
+
+  
+   useEffect(() => {
+
+    socket.on("connect", () => {
+      console.log("🟢 Socket Connected:", socket.id);
+    });
+
+    socket.on("disconnect", () => {
+      console.log("🔴 Socket Disconnected");
+    });
+
+    return () => {
+      socket.off("connect");
+      socket.off("disconnect");
+    };
+
+  }, []);
+
   return (
     <Router>
       <Routes>
