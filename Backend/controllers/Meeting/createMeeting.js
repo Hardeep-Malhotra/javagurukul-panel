@@ -1,4 +1,7 @@
 const Meeting = require("../../models/Meeting");
+const Student = require("../../models/Student");
+const sendEmail = require("../../utils/sendEmail");
+const meetingScheduleTemplate = require("../../utils/emailTemplates/meetingScheduleTemplate");
 const generateMeetingCode = require("../../utils/meetingCodeGenerator");
 
 const { createMeetingSchema } = require("../../validators/meetingValidator");
@@ -61,11 +64,40 @@ const createMeeting = async (req, res, next) => {
     });
 
     // ==========================
+    // Send Email To All Students
+    // ==========================
+
+    const students = await Student.find({
+      batch,
+      status: "Active",
+    });
+
+    const meetingLink = `http://localhost:5173/student/join-meeting?code=${meetingCode}`;
+
+    for (const student of students) {
+      const html = meetingScheduleTemplate({
+        studentName: student.name,
+        title,
+        teacherName,
+        batch,
+        meetingCode,
+        scheduledAt,
+        meetingLink,
+      });
+
+      await sendEmail({
+        to: student.email,
+        subject: `📢 Live Class Scheduled - ${title}`,
+        html,
+      });
+    }
+
+    // ==========================
     // Success Response
     // ==========================
     return res.status(201).json({
       success: true,
-      message: "Meeting created successfully.",
+      message: `Meeting created successfully. Email sent to ${students.length} students.`,
       data: {
         meetingId: newMeeting._id,
         meetingCode: newMeeting.meetingCode,
