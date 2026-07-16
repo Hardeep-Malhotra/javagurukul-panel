@@ -92,7 +92,7 @@ const Login = () => {
         if (response.data.success) {
           message.success(response.data.message);
           localStorage.setItem("adminUser", JSON.stringify(response.data.user));
-          navigate("/dashboard");
+          navigate("/admin/dashboard");
         }
       }
     } catch (error) {

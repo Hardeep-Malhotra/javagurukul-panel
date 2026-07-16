@@ -1,4 +1,5 @@
-// 📄 frontend/src/App.jsx
+// 📄 src/App.jsx
+
 import { useEffect, useState } from "react";
 import {
   BrowserRouter as Router,
@@ -7,44 +8,57 @@ import {
   Navigate,
   Outlet,
 } from "react-router-dom";
+
 import Login from "./pages/Login";
+
+// Admin Pages
 import Dashboard from "./pages/Dashboard";
 import StudentManagement from "./pages/StudentManagement";
-import AdminLayout from "./components/Layout/AdminLayout";
-import BatchManagement from "./pages/BatchManagement"; // 🌟 1. NEW IMPORT: Batch component ko link kiya
+import BatchManagement from "./pages/BatchManagement";
+import VideoManagement from "./pages/VideoManagement";
+import MeetingManagement from "./pages/MeetingManagement";
+import MeetingRoom from "./pages/MeetingRoom";
 
-// 🎓 Student Portal Components Imports
+import AdminLayout from "./components/Layout/AdminLayout";
+
+// Student Portal
 import StudentLogin from "./pages/student/StudentLogin";
 import PortalHome from "./pages/student/PortalHome";
 import StudentNavbar from "./components/StudentPortal/StudentNavbar";
 import StudentSidebar from "./components/StudentPortal/StudentSidebar";
 import StudentVideoPlayer from "./pages/student/StudentVideoPlayer";
 import { useStudentAuth } from "./context/StudentAuthContext";
-import socket from "../src/socket"
 
-
-
+import socket from "./socket";
 
 // ==========================================
-// 🛡️ ADMIN PANEL ROUTE GUARD
+// Admin Route Guard
 // ==========================================
-const ProtectedRoute = ({ children }) => {
+const ProtectedRoute = () => {
   const token = localStorage.getItem("adminUser");
-  return token ? children : <Navigate to="/" />;
+
+  if (!token) {
+    return <Navigate to="/" replace />;
+  }
+
+  return <Outlet />;
 };
 
 // ==========================================
-// 🛡️ STUDENT PORTAL ROUTE GUARD
+// Student Route Guard
 // ==========================================
-const StudentProtectedRoute = ({ children }) => {
+const StudentProtectedRoute = () => {
   const { student } = useStudentAuth();
-  return student ? children : <Navigate to="/student/login" />;
+
+  if (!student) {
+    return <Navigate to="/student/login" replace />;
+  }
+
+  return <Outlet />;
 };
 
-// 📄 frontend/src/App.jsx
-
 // ==========================================
-// 🎛️ STUDENT PORTAL STRUCTURE LAYOUT
+// Student Layout
 // ==========================================
 const StudentLayout = () => {
   const [activeTab, setActiveTab] = useState("lectures");
@@ -52,10 +66,14 @@ const StudentLayout = () => {
   return (
     <div className="min-h-screen flex flex-col bg-[#f4f7f9]">
       <StudentNavbar />
+
       <div className="flex flex-col md:flex-row flex-1">
-        <StudentSidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+        <StudentSidebar
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+        />
+
         <main className="flex-1 p-4 sm:p-6 md:p-8">
-          {/* 🌟 FIXED: activeTab ke saath setActiveTab bhi pass kar diya */}
           <Outlet context={{ activeTab, setActiveTab }} />
         </main>
       </div>
@@ -64,16 +82,12 @@ const StudentLayout = () => {
 };
 
 // ==========================================
-// 🚀 MAIN APP ENGINE ROUTER
+// Main App
 // ==========================================
 const App = () => {
-
-
-  
-   useEffect(() => {
-
+  useEffect(() => {
     socket.on("connect", () => {
-      console.log("🟢 Socket Connected:", socket.id);
+      console.log("🟢 Socket Connected :", socket.id);
     });
 
     socket.on("disconnect", () => {
@@ -84,48 +98,92 @@ const App = () => {
       socket.off("connect");
       socket.off("disconnect");
     };
-
   }, []);
 
   return (
     <Router>
       <Routes>
-        {/* ... Admin Routes same rahenge ... */}
+
+        {/* Login */}
         <Route path="/" element={<Login />} />
 
-        <Route
-          element={
-            <ProtectedRoute>
-              <AdminLayout />
-            </ProtectedRoute>
-          }
-        >
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/students" element={<StudentManagement />} />
-          <Route path="/admin/batches" element={<BatchManagement />} />
-        </Route>
+        {/* ========================= */}
+        {/* Admin Panel */}
+        {/* ========================= */}
 
-        {/* ==================================
-            🎓 STUDENT PORTAL ENDPOINTS
-           ================================== */}
-        <Route path="/student/login" element={<StudentLogin />} />
+        <Route element={<ProtectedRoute />}>
 
-        <Route
-          element={
-            <StudentProtectedRoute>
-              <StudentLayout />
-            </StudentProtectedRoute>
-          }
-        >
-          <Route path="/student/portal" element={<PortalHome />} />
+          <Route element={<AdminLayout />}>
+
+            <Route
+              path="/admin/dashboard"
+              element={<Dashboard />}
+            />
+
+            <Route
+              path="/admin/students"
+              element={<StudentManagement />}
+            />
+
+            <Route
+              path="/admin/batches"
+              element={<BatchManagement />}
+            />
+
+            <Route
+              path="/admin/videos"
+              element={<VideoManagement />}
+            />
+
+            <Route
+              path="/admin/meetings"
+              element={<MeetingManagement />}
+            />
+
+          </Route>
+
+          {/* Full Screen Meeting */}
           <Route
-            path="/student/watch/:videoId"
-            element={<StudentVideoPlayer />}
+            path="/meeting/:meetingCode"
+            element={<MeetingRoom />}
           />
+
         </Route>
 
-        {/* 🔄 Wildcard Fallback Router Catch */}
-        <Route path="*" element={<Navigate to="/" replace />} />
+        {/* ========================= */}
+        {/* Student */}
+        {/* ========================= */}
+
+        <Route
+          path="/student/login"
+          element={<StudentLogin />}
+        />
+
+        <Route element={<StudentProtectedRoute />}>
+
+          <Route element={<StudentLayout />}>
+
+            <Route
+              path="/student/portal"
+              element={<PortalHome />}
+            />
+
+            <Route
+              path="/student/watch/:videoId"
+              element={<StudentVideoPlayer />}
+            />
+
+          </Route>
+
+        </Route>
+
+        {/* ========================= */}
+
+        <Route
+          path="*"
+          element={<Navigate to="/" replace />}
+        />
+
       </Routes>
     </Router>
   );

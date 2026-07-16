@@ -12,8 +12,9 @@ const MeetingManagement = () => {
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
-  const fetchMeetings = async () => {
+const fetchMeetings = async () => {
     try {
+      setLoading(true); 
       const response = await getAllMeetingsAPI();
 
       if (response.success) {
@@ -26,7 +27,6 @@ const MeetingManagement = () => {
       setLoading(false);
     }
   };
-
   useEffect(() => {
     setLoading(true);
     fetchMeetings();
