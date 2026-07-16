@@ -26,7 +26,7 @@ const studentSchema = new mongoose.Schema(
     batch: {
       type: String,
       required: true,
-      trimL: true,
+      trim: true,
     },
     //  Account status
     status: {
