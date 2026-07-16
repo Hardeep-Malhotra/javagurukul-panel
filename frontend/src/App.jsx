@@ -28,6 +28,7 @@ import StudentNavbar from "./components/StudentPortal/StudentNavbar";
 import StudentSidebar from "./components/StudentPortal/StudentSidebar";
 import StudentVideoPlayer from "./pages/student/StudentVideoPlayer";
 import { useStudentAuth } from "./context/StudentAuthContext";
+import StudentMeetingGate from "./pages/student/StudentMeetingGate";
 
 import socket from "./socket";
 
@@ -174,6 +175,10 @@ const App = () => {
             />
 
           </Route>
+          <Route
+  path="/student/join-meeting"
+  element={<StudentMeetingGate />}
+/>
 
         </Route>
 

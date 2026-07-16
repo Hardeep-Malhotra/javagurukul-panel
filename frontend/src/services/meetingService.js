@@ -89,3 +89,21 @@ export const endMeetingAPI = async (meetingId) => {
 
   return response.data;
 };
+
+// ==========================================
+// Verify Meeting
+// ==========================================
+
+export const verifyMeetingAPI = async (meetingCode) => {
+  const response = await axios.post(
+    `${API_URL}/verify`,
+    {
+      meetingCode,
+    },
+    {
+      withCredentials: true,
+    }
+  );
+
+  return response.data;
+};
