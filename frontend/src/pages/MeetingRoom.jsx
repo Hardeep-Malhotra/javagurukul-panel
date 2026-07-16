@@ -7,7 +7,12 @@ import MeetingHeader from "../components/Meeting/MeetingHeader";
 import ParticipantPanel from "../components/Meeting/ParticipantPanel";
 import VideoGrid from "../components/Meeting/VideoGrid";
 import MeetingControls from "../components/Meeting/MeetingControls";
+import {
+  verifyMeetingAPI,
+  joinMeetingAPI,
+} from "../services/meetingService";
 
+import { useStudentAuth } from "../context/StudentAuthContext";
 import socket from "../socket";
 
 const MeetingRoom = () => {
@@ -21,9 +26,17 @@ const MeetingRoom = () => {
   const [isVideoMuted, setIsVideoMuted] = useState(false);
 
   // 🔑 User Identity
-  const userName = "Hardeep Singh";
-  const role = "Teacher";
+  const { student } = useStudentAuth();
 
+const userName = student?.name;
+
+const studentId = student?.id;
+
+const role = "Student";
+
+console.log( "Student  ",student);
+console.log("studen name ",userName);
+console.log("studetn id",studentId);
   // ==========================================
   // 🎥 1. WebRTC: Camera & Mic Init
   // ==========================================
@@ -54,42 +67,79 @@ const MeetingRoom = () => {
   // ==========================================
   // 🔌 2. Socket Connection & Synchronization
   // ==========================================
-  useEffect(() => {
-    // Join Meeting Socket Sync
-    socket.emit("join-meeting", {
-      meetingCode,
-      userName,
-      role,
-    });
+  // ==========================================
+// 🔌 Verify + Join + Socket
+// ==========================================
+useEffect(() => {
+  const initializeMeeting = async () => {
+    try {
+      // Verify Meeting
+      await verifyMeetingAPI(meetingCode);
 
-    // Participant Joined Listener
-    socket.on("participant-joined", (data) => {
-      setParticipants((prev) => {
-        const exists = prev.find((item) => item.socketId === data.socketId);
-        if (exists) return prev;
-        return [...prev, data];
-      });
-      message.success(`${data.userName} joined the classroom.`);
-    });
+      // Join Meeting
+      await joinMeetingAPI({
+  meetingCode,
+  studentId,
+});
 
-    // Participant Left Listener
-    socket.on("participant-left", (data) => {
-      setParticipants((prev) =>
-        prev.filter((item) => item.socketId !== data.socketId)
-      );
-    });
-
-    // Clean up connections on unmount
-    return () => {
-      socket.emit("leave-meeting", {
+      // Socket Join
+      socket.emit("join-meeting", {
         meetingCode,
         userName,
+        role,
       });
-      socket.off("participant-joined");
-      socket.off("participant-left");
-    };
-  }, [meetingCode]);
 
+      // Someone Joined
+      socket.on("participant-joined", (data) => {
+        setParticipants((prev) => {
+          const exists = prev.find(
+            (item) => item.socketId === data.socketId
+          );
+
+          if (exists) return prev;
+
+          return [...prev, data];
+        });
+
+        message.success(`${data.userName} joined the classroom.`);
+      });
+
+      // Someone Left
+      socket.on("participant-left", (data) => {
+        setParticipants((prev) =>
+          prev.filter(
+            (item) => item.socketId !== data.socketId
+          )
+        );
+      });
+
+    } catch (error) {
+      console.error(error);
+
+      message.error(
+        error.response?.data?.message ||
+        "Unable to join meeting."
+      );
+
+      navigate("/student/portal");
+    }
+  };
+
+  if (studentId) {
+    initializeMeeting();
+  }
+
+  return () => {
+    socket.emit("leave-meeting", {
+      meetingCode,
+      userName,
+    });
+
+    socket.off("participant-joined");
+    socket.off("participant-left");
+  };
+
+}, [meetingCode, studentId]);
   // ==========================================
   // 🎛️ 3. Media Controls Handlers
   // ==========================================

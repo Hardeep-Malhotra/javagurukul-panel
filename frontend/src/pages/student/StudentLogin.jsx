@@ -22,7 +22,11 @@ const StudentLogin = () => {
       const data = await loginStudent(email, password);
       if (data.success) {
         // Auth Context ke login method ko trigger karo data global store karne ke liye
+
+        console.log("API Response =", data);
         login(data.student);
+
+console.log("Student Saved =", data.student);
         navigate("/student/portal");
       }
     } catch (err) {

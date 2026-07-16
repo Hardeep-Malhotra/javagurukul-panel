@@ -160,28 +160,29 @@ const App = () => {
           element={<StudentLogin />}
         />
 
-        <Route element={<StudentProtectedRoute />}>
+ <Route element={<StudentProtectedRoute />}>
+  <Route element={<StudentLayout />}>
+    <Route
+      path="/student/portal"
+      element={<PortalHome />}
+    />
 
-          <Route element={<StudentLayout />}>
+    <Route
+      path="/student/watch/:videoId"
+      element={<StudentVideoPlayer />}
+    />
+  </Route>
 
-            <Route
-              path="/student/portal"
-              element={<PortalHome />}
-            />
+  <Route
+    path="/student/join-meeting"
+    element={<StudentMeetingGate />}
+  />
 
-            <Route
-              path="/student/watch/:videoId"
-              element={<StudentVideoPlayer />}
-            />
-
-          </Route>
-          <Route
-  path="/student/join-meeting"
-  element={<StudentMeetingGate />}
-/>
-
-        </Route>
-
+  <Route
+    path="/meeting/:meetingCode"
+    element={<MeetingRoom />}
+  />
+</Route>
         {/* ========================= */}
 
         <Route
