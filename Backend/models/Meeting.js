@@ -22,7 +22,7 @@ const participantSchema = new mongoose.Schema(
       default: Date.now,
     },
   },
-  { _id: false }
+  { _id: false },
 );
 
 // ==========================================
@@ -58,6 +58,11 @@ const meetingSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
+    },
+
+    scheduledAt: {
+      type: Date,
+      required: true,
     },
 
     // Meeting Status
@@ -123,7 +128,7 @@ const meetingSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 module.exports = mongoose.model("Meeting", meetingSchema);

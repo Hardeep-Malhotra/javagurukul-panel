@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
-import { Modal, Form, Input, Select, Button, message } from "antd";
+import { Modal, Form, Input, Select, Button, DatePicker, message } from "antd";
+
+import dayjs from "dayjs";
 import Cookies from "js-cookie";
 
 import { createMeetingAPI } from "../../services/meetingService";
@@ -76,7 +78,12 @@ const CreateMeetingModal = ({ open, onClose, onRefresh }) => {
     try {
       setLoading(true);
 
-      const response = await createMeetingAPI(values);
+      const payload = {
+        ...values,
+        scheduledAt: values.scheduledAt.toISOString(),
+      };
+
+      const response = await createMeetingAPI(payload);
 
       if (response.success) {
         message.success(response.message);
@@ -93,13 +100,12 @@ const CreateMeetingModal = ({ open, onClose, onRefresh }) => {
       console.error(error);
 
       message.error(
-        error.response?.data?.message || "Failed to create meeting."
+        error.response?.data?.message || "Failed to create meeting.",
       );
     } finally {
       setLoading(false);
     }
   };
-
   return (
     <Modal
       title="Create Live Meeting"
@@ -112,11 +118,7 @@ const CreateMeetingModal = ({ open, onClose, onRefresh }) => {
         onClose();
       }}
     >
-      <Form
-        form={form}
-        layout="vertical"
-        onFinish={handleSubmit}
-      >
+      <Form form={form} layout="vertical" onFinish={handleSubmit}>
         {/* Meeting Title */}
 
         <Form.Item
@@ -151,10 +153,7 @@ const CreateMeetingModal = ({ open, onClose, onRefresh }) => {
             onChange={handleBatchChange}
           >
             {batches.map((batch) => (
-              <Select.Option
-                key={batch._id}
-                value={batch.batchName}
-              >
+              <Select.Option key={batch._id} value={batch.batchName}>
                 {batch.batchName}
               </Select.Option>
             ))}
@@ -173,9 +172,29 @@ const CreateMeetingModal = ({ open, onClose, onRefresh }) => {
             },
           ]}
         >
-          <Input
-            
-            placeholder="Teacher Name"
+          <Input placeholder="Teacher Name" />
+        </Form.Item>
+
+        {/* Meeting Schedule */}
+
+        <Form.Item
+          label="Meeting Date & Time"
+          name="scheduledAt"
+          rules={[
+            {
+              required: true,
+              message: "Please select meeting date & time.",
+            },
+          ]}
+        >
+          <DatePicker
+            showTime
+            className="w-full"
+            format="DD-MM-YYYY HH:mm"
+            placeholder="Select Date & Time"
+            disabledDate={(current) =>
+              current && current < dayjs().startOf("day")
+            }
           />
         </Form.Item>
 

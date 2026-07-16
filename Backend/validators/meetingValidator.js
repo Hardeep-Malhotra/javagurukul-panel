@@ -19,6 +19,8 @@ const createMeetingSchema = Joi.object({
     "string.max": "Teacher name cannot exceed 50 characters.",
     "any.required": "Teacher name is required.",
   }),
+  scheduledAt: Joi.date().required(),
+  
 });
 
 module.exports = {

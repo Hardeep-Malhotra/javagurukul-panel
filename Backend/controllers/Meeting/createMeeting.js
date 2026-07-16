@@ -1,10 +1,7 @@
-
 const Meeting = require("../../models/Meeting");
 const generateMeetingCode = require("../../utils/meetingCodeGenerator");
 
-const {
-  createMeetingSchema,
-} = require("../../validators/meetingValidator");
+const { createMeetingSchema } = require("../../validators/meetingValidator");
 
 const createMeeting = async (req, res, next) => {
   try {
@@ -17,7 +14,7 @@ const createMeeting = async (req, res, next) => {
       return next(error);
     }
 
-    const { title, batch, teacherName } = req.body;
+    const { title, batch, teacherName, scheduledAt } = req.body;
 
     // ==========================
     // Generate Unique Meeting Code
@@ -59,6 +56,7 @@ const createMeeting = async (req, res, next) => {
       title,
       batch,
       teacherName,
+      scheduledAt,
       status: "waiting",
     });
 
@@ -74,6 +72,7 @@ const createMeeting = async (req, res, next) => {
         title: newMeeting.title,
         batch: newMeeting.batch,
         teacherName: newMeeting.teacherName,
+        scheduledAt: newMeeting.scheduledAt,
         status: newMeeting.status,
         createdAt: newMeeting.createdAt,
       },
