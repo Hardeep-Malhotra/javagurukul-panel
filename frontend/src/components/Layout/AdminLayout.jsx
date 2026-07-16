@@ -15,7 +15,8 @@ import {
   TeamOutlined,
   UserOutlined,
   YoutubeOutlined,
-  AppstoreAddOutlined, // 🌟 1. NEW ICON IMPORT FOR BATCHES
+  AppstoreAddOutlined,
+  VideoCameraAddOutlined,
 } from "@ant-design/icons";
 import { useState } from "react";
 import Cookies from "js-cookie";
@@ -23,7 +24,7 @@ import Dashboard from "../../pages/Dashboard";
 import StudentManagement from "../../pages/StudentManagement";
 import VideoManagement from "../../pages/VideoManagement";
 import BatchManagement from "../../pages/BatchManagement"; // 🌟 2. IMPORT BATCH MANAGEMENT PAGE
-
+import MeetingManagement from "../../pages/MeetingManagement";
 const { Header, Sider, Content } = Layout;
 
 const menuSections = [
@@ -43,6 +44,11 @@ const menuSections = [
         key: "12",
         icon: <YoutubeOutlined style={{ color: "#ff0000" }} />,
         label: "Video Access",
+      },
+      {
+        key: "14",
+        icon: <VideoCameraAddOutlined />,
+        label: "Live Meetings",
       },
       { key: "4", icon: <VideoCameraOutlined />, label: "Demo Classes" },
       { key: "5", icon: <BookOutlined />, label: "Courses" },
@@ -207,6 +213,8 @@ const AdminLayout = () => {
             <VideoManagement />
           ) : key === "13" ? (
             <BatchManagement /> // 🌟 4. CONDITIONAL RENDERING FOR NEW BATCH MANAGEMENT PAGE
+          ) : key === "14" ? (
+            <MeetingManagement />
           ) : (
             <div className="bg-white p-6 rounded-xl shadow-sm text-center font-medium text-gray-500">
               Coming Soon... Component for Key {key} is under development.
