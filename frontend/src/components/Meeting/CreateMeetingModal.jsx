@@ -1,17 +1,77 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Modal, Form, Input, Select, Button, message } from "antd";
+import Cookies from "js-cookie";
 
 import { createMeetingAPI } from "../../services/meetingService";
-
-const { Option } = Select;
+import { fetchAllBatchesAPI } from "../../services/studentService";
 
 const CreateMeetingModal = ({ open, onClose, onRefresh }) => {
   const [form] = Form.useForm();
-  const [loading, setLoading] = useState(false);
 
-  // ==========================
+  const [loading, setLoading] = useState(false);
+  const [batches, setBatches] = useState([]);
+
+  // ==========================================
+  // Logged In Admin
+  // ==========================================
+
+  const savedUser = Cookies.get("adminUser");
+
+  const userData = savedUser
+    ? JSON.parse(savedUser)
+    : {
+        name: "",
+      };
+
+  // ==========================================
+  // Load All Batches
+  // ==========================================
+
+  const loadBatches = async () => {
+    try {
+      const response = await fetchAllBatchesAPI();
+
+      if (response.success) {
+        setBatches(response.data);
+      }
+    } catch (error) {
+      console.error(error);
+      message.error("Failed to load batches.");
+    }
+  };
+
+  // ==========================================
+  // Open Modal
+  // ==========================================
+
+  useEffect(() => {
+    if (open) {
+      loadBatches();
+
+      form.setFieldsValue({
+        teacherName: userData.name,
+      });
+    }
+  }, [open]);
+
+  // ==========================================
+  // Batch Change
+  // ==========================================
+
+  const handleBatchChange = (batchName) => {
+    const currentTitle = form.getFieldValue("title");
+
+    if (!currentTitle || currentTitle.trim() === "") {
+      form.setFieldsValue({
+        title: `Live Class - ${batchName}`,
+      });
+    }
+  };
+
+  // ==========================================
   // Create Meeting
-  // ==========================
+  // ==========================================
+
   const handleSubmit = async (values) => {
     try {
       setLoading(true);
@@ -25,9 +85,13 @@ const CreateMeetingModal = ({ open, onClose, onRefresh }) => {
 
         onClose();
 
-        onRefresh();
+        if (onRefresh) {
+          onRefresh();
+        }
       }
     } catch (error) {
+      console.error(error);
+
       message.error(
         error.response?.data?.message || "Failed to create meeting."
       );
@@ -40,13 +104,13 @@ const CreateMeetingModal = ({ open, onClose, onRefresh }) => {
     <Modal
       title="Create Live Meeting"
       open={open}
+      footer={null}
+      centered
+      destroyOnClose
       onCancel={() => {
         form.resetFields();
         onClose();
       }}
-      footer={null}
-      centered
-      destroyOnClose
     >
       <Form
         form={form}
@@ -54,6 +118,7 @@ const CreateMeetingModal = ({ open, onClose, onRefresh }) => {
         onFinish={handleSubmit}
       >
         {/* Meeting Title */}
+
         <Form.Item
           label="Meeting Title"
           name="title"
@@ -68,31 +133,50 @@ const CreateMeetingModal = ({ open, onClose, onRefresh }) => {
         </Form.Item>
 
         {/* Batch */}
+
         <Form.Item
           label="Batch"
           name="batch"
           rules={[
             {
               required: true,
-              message: "Please select batch.",
+              message: "Please select a batch.",
             },
           ]}
         >
-          <Input placeholder="JULY JAVASCRIPT 2026" />
+          <Select
+            placeholder="Select Batch"
+            showSearch
+            optionFilterProp="children"
+            onChange={handleBatchChange}
+          >
+            {batches.map((batch) => (
+              <Select.Option
+                key={batch._id}
+                value={batch.batchName}
+              >
+                {batch.batchName}
+              </Select.Option>
+            ))}
+          </Select>
         </Form.Item>
 
-        {/* Teacher */}
+        {/* Teacher Name */}
+
         <Form.Item
           label="Teacher Name"
           name="teacherName"
           rules={[
             {
               required: true,
-              message: "Please enter teacher name.",
+              message: "Teacher name is required.",
             },
           ]}
         >
-          <Input placeholder="Hardeep Singh" />
+          <Input
+            
+            placeholder="Teacher Name"
+          />
         </Form.Item>
 
         <Button

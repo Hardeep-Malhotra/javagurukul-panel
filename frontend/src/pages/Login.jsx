@@ -38,6 +38,7 @@ const Login = () => {
       );
 
       if (response.data.success) {
+         console.log(response.data.user);
         message.success("A fresh security OTP has been sent to your email!");
         resetTimer();
       }

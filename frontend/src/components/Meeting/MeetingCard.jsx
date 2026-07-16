@@ -1,4 +1,4 @@
-import { Button, Tag, message } from "antd";
+import { Button, Tag, message, Tooltip } from "antd";
 import {
   CalendarOutlined,
   UserOutlined,
@@ -6,6 +6,7 @@ import {
   VideoCameraOutlined,
   PlayCircleOutlined,
   StopOutlined,
+  CopyOutlined,
 } from "@ant-design/icons";
 
 import {
@@ -47,93 +48,148 @@ const MeetingCard = ({ meeting, onRefresh }) => {
   };
 
   // ==========================
-  // Status Color
+  // Copy Meeting Code
   // ==========================
-  const getStatusColor = () => {
+  const copyMeetingCode = async () => {
+    await navigator.clipboard.writeText(meeting.meetingCode);
+    message.success("Meeting code copied.");
+  };
+
+  // ==========================
+  // Status Badge
+  // ==========================
+  const getStatus = () => {
     switch (meeting.status) {
       case "waiting":
-        return "gold";
+        return (
+          <Tag color="gold">
+            🟡 WAITING
+          </Tag>
+        );
 
       case "live":
-        return "green";
+        return (
+          <Tag color="green">
+            🔴 LIVE
+          </Tag>
+        );
 
       case "ended":
-        return "red";
+        return (
+          <Tag color="red">
+            ⛔ ENDED
+          </Tag>
+        );
 
       default:
-        return "default";
+        return <Tag>UNKNOWN</Tag>;
     }
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 flex flex-col justify-between">
+    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-lg transition-all duration-300 p-5 flex flex-col justify-between">
 
       <div>
 
-        <div className="flex justify-between items-start mb-4">
+        {/* Header */}
 
-          <h2 className="text-lg font-bold text-gray-800">
+        <div className="flex justify-between items-start mb-5">
+
+          <h2 className="text-xl font-bold text-gray-800">
             {meeting.title}
           </h2>
 
-          <Tag color={getStatusColor()}>
-            {meeting.status.toUpperCase()}
-          </Tag>
+          {getStatus()}
 
         </div>
 
-        <div className="space-y-3 text-gray-600">
+        {/* Body */}
 
-          <p className="flex items-center gap-2">
+        <div className="space-y-4 text-gray-700">
+
+          <div className="flex items-center gap-3">
             <UserOutlined />
-            {meeting.teacherName}
-          </p>
+            <span>{meeting.teacherName}</span>
+          </div>
 
-          <p className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <TeamOutlined />
-            {meeting.batch}
-          </p>
+            <span>{meeting.batch}</span>
+          </div>
 
-          <p className="flex items-center gap-2">
-            <VideoCameraOutlined />
-            {meeting.meetingCode}
-          </p>
+          <div className="flex items-center justify-between bg-gray-50 rounded-lg px-3 py-2">
 
-          <p className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
+              <VideoCameraOutlined />
+              <span className="font-semibold">
+                {meeting.meetingCode}
+              </span>
+            </div>
+
+            <Tooltip title="Copy Meeting Code">
+              <Button
+                size="small"
+                type="text"
+                icon={<CopyOutlined />}
+                onClick={copyMeetingCode}
+              />
+            </Tooltip>
+
+          </div>
+
+          <div className="flex items-center gap-3">
             <CalendarOutlined />
-            {new Date(meeting.createdAt).toLocaleString()}
-          </p>
+            <span>
+              {new Date(meeting.createdAt).toLocaleString()}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-3">
+            👨‍🎓
+            <span>
+              Participants : {meeting.participants.length}
+            </span>
+          </div>
 
         </div>
 
       </div>
 
-      <div className="flex gap-3 mt-6">
+      {/* Footer */}
+
+      <div className="mt-6">
 
         {meeting.status === "waiting" && (
           <Button
             type="primary"
             icon={<PlayCircleOutlined />}
-            className="flex-1 bg-green-600"
+            block
+            size="large"
             onClick={handleStartMeeting}
+            className="bg-green-600"
           >
-            Start
+            Start Meeting
           </Button>
         )}
 
         {meeting.status === "live" && (
           <Button
             danger
+            block
+            size="large"
             icon={<StopOutlined />}
-            className="flex-1"
             onClick={handleEndMeeting}
           >
-            End
+            End Meeting
           </Button>
         )}
 
         {meeting.status === "ended" && (
-          <Button disabled className="flex-1">
+          <Button
+            disabled
+            block
+            size="large"
+          >
             Meeting Ended
           </Button>
         )}
