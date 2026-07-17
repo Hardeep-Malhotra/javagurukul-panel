@@ -69,11 +69,18 @@ const joinMeeting = async (req, res, next) => {
       (participant) =>
         participant.studentId.toString() === student._id.toString(),
     );
-
     if (alreadyJoined) {
-      return res.status(400).json({
-        success: false,
-        message: "Student already joined this meeting.",
+      return res.status(200).json({
+        success: true,
+        message: "Student already in meeting.",
+        data: {
+          meetingId: meeting._id,
+          meetingCode: meeting.meetingCode,
+          title: meeting.title,
+          batch: meeting.batch,
+          studentName: student.name,
+          status: meeting.status,
+        },
       });
     }
 

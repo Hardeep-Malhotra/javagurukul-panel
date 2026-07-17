@@ -13,12 +13,10 @@ const setupMeetingSocket = (io) => {
       socket.data.userName = userName;
       socket.data.role = role;
 
-      console.log(
-        `✅ ${userName} (${role}) joined room : ${meetingCode}`
-      );
+      console.log(`✅ ${userName} (${role}) joined room : ${meetingCode}`);
 
       // Notify everyone in room
-      io.to(meetingCode).emit("participant-joined", {
+      socket.to(meetingCode).emit("participant-joined", {
         socketId: socket.id,
         userName,
         role,
@@ -28,10 +26,7 @@ const setupMeetingSocket = (io) => {
       // Debug Room Count
       const room = io.sockets.adapter.rooms.get(meetingCode);
 
-      console.log(
-        `👥 Participants in ${meetingCode}:`,
-        room ? room.size : 0
-      );
+      console.log(`👥 Participants in ${meetingCode}:`, room ? room.size : 0);
     });
 
     // ==========================================
@@ -40,9 +35,7 @@ const setupMeetingSocket = (io) => {
     socket.on("leave-meeting", ({ meetingCode, userName }) => {
       socket.leave(meetingCode);
 
-      console.log(
-        `❌ ${userName} left room : ${meetingCode}`
-      );
+      console.log(`❌ ${userName} left room : ${meetingCode}`);
 
       io.to(meetingCode).emit("participant-left", {
         socketId: socket.id,
@@ -52,10 +45,7 @@ const setupMeetingSocket = (io) => {
 
       const room = io.sockets.adapter.rooms.get(meetingCode);
 
-      console.log(
-        `👥 Participants in ${meetingCode}:`,
-        room ? room.size : 0
-      );
+      console.log(`👥 Participants in ${meetingCode}:`, room ? room.size : 0);
 
       // Clear socket data
       socket.data.meetingCode = null;
@@ -68,7 +58,7 @@ const setupMeetingSocket = (io) => {
     // ==========================================
     socket.on("disconnect", () => {
       const { meetingCode, userName } = socket.data;
-
+       
       if (meetingCode && userName) {
         io.to(meetingCode).emit("participant-left", {
           socketId: socket.id,
@@ -78,10 +68,7 @@ const setupMeetingSocket = (io) => {
 
         const room = io.sockets.adapter.rooms.get(meetingCode);
 
-        console.log(
-          `👥 Participants in ${meetingCode}:`,
-          room ? room.size : 0
-        );
+        console.log(`👥 Participants in ${meetingCode}:`, room ? room.size : 0);
       }
 
       console.log(`🔴 User Disconnected : ${socket.id}`);

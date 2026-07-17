@@ -7,10 +7,7 @@ import MeetingHeader from "../components/Meeting/MeetingHeader";
 import ParticipantPanel from "../components/Meeting/ParticipantPanel";
 import VideoGrid from "../components/Meeting/VideoGrid";
 import MeetingControls from "../components/Meeting/MeetingControls";
-import {
-  verifyMeetingAPI,
-  joinMeetingAPI,
-} from "../services/meetingService";
+import { verifyMeetingAPI, joinMeetingAPI } from "../services/meetingService";
 
 import { useStudentAuth } from "../context/StudentAuthContext";
 import socket from "../socket";
@@ -28,15 +25,20 @@ const MeetingRoom = () => {
   // 🔑 User Identity
   const { student } = useStudentAuth();
 
-const userName = student?.name;
+  const admin = JSON.parse(localStorage.getItem("adminUser"));
 
-const studentId = student?.id;
+  const isStudent = !!student;
+  const isAdmin = !!admin;
 
-const role = "Student";
+  const currentUser = isStudent ? student : admin;
 
-console.log( "Student  ",student);
-console.log("studen name ",userName);
-console.log("studetn id",studentId);
+  const userName = currentUser?.name;
+  const studentId = student?.id || null;
+
+  const role = isStudent ? "Student" : "Teacher";
+
+  console.log("Current User :", currentUser);
+  console.log("Role :", role);
   // ==========================================
   // 🎥 1. WebRTC: Camera & Mic Init
   // ==========================================
@@ -68,78 +70,74 @@ console.log("studetn id",studentId);
   // 🔌 2. Socket Connection & Synchronization
   // ==========================================
   // ==========================================
-// 🔌 Verify + Join + Socket
-// ==========================================
-useEffect(() => {
-  const initializeMeeting = async () => {
-    try {
-      // Verify Meeting
-      await verifyMeetingAPI(meetingCode);
+  // 🔌 Verify + Join + Socket
+  // ==========================================
+  useEffect(() => {
+    const initializeMeeting = async () => {
+      try {
+        // // Verify Meeting
+        // await verifyMeetingAPI(meetingCode);
 
-      // Join Meeting
-      await joinMeetingAPI({
-  meetingCode,
-  studentId,
-});
+        // // Student only
+        // if (isStudent) {
+        //   await joinMeetingAPI({
+        //     meetingCode,
+        //     studentId,
+        //   });
+        // }
 
-      // Socket Join
-      socket.emit("join-meeting", {
-        meetingCode,
-        userName,
-        role,
-      });
-
-      // Someone Joined
-      socket.on("participant-joined", (data) => {
-        setParticipants((prev) => {
-          const exists = prev.find(
-            (item) => item.socketId === data.socketId
-          );
-
-          if (exists) return prev;
-
-          return [...prev, data];
+        // Teacher + Student dono socket room join karenge
+        socket.emit("join-meeting", {
+          meetingCode,
+          userName,
+          role,
         });
 
-        message.success(`${data.userName} joined the classroom.`);
-      });
+        socket.on("participant-joined", (data) => {
+          setParticipants((prev) => {
+            const exists = prev.find((item) => item.socketId === data.socketId);
 
-      // Someone Left
-      socket.on("participant-left", (data) => {
-        setParticipants((prev) =>
-          prev.filter(
-            (item) => item.socketId !== data.socketId
-          )
+            if (exists) return prev;
+
+            return [...prev, data];
+          });
+
+          message.success(`${data.userName} joined the classroom.`);
+        });
+
+        socket.on("participant-left", (data) => {
+          setParticipants((prev) =>
+            prev.filter((item) => item.socketId !== data.socketId),
+          );
+        });
+      } catch (error) {
+        console.error(error);
+
+        message.error(
+          error.response?.data?.message || "Unable to join meeting.",
         );
+
+        if (isStudent) {
+          navigate("/student/portal");
+        } else {
+          navigate("/admin/meetings");
+        }
+      }
+    };
+    if (currentUser) {
+      initializeMeeting();
+    }
+
+    return () => {
+      socket.emit("leave-meeting", {
+        meetingCode,
+        userName,
       });
 
-    } catch (error) {
-      console.error(error);
-
-      message.error(
-        error.response?.data?.message ||
-        "Unable to join meeting."
-      );
-
-      navigate("/student/portal");
-    }
-  };
-
-  if (studentId) {
-    initializeMeeting();
-  }
-
-  return () => {
-    socket.emit("leave-meeting", {
-      meetingCode,
-      userName,
-    });
-
-    socket.off("participant-joined");
-    socket.off("participant-left");
-  };
-
-}, [meetingCode, studentId]);
+      socket.off("participant-joined");
+      socket.off("participant-left");
+    };
+  }, [meetingCode, currentUser]);
   // ==========================================
   // 🎛️ 3. Media Controls Handlers
   // ==========================================
@@ -165,15 +163,20 @@ useEffect(() => {
 
   const handleLeaveMeeting = () => {
     if (localStream) {
-      localStream.getTracks().forEach((track) => track.stop()); // Stop camera light instantly
+      localStream.getTracks().forEach((track) => track.stop());
     }
+
     socket.emit("leave-meeting", {
       meetingCode,
       userName,
     });
-    navigate(-1); // Back to meeting management dashboard
-  };
 
+    if (isStudent) {
+      navigate("/student/portal");
+    } else {
+      navigate("/admin/meetings");
+    }
+  };
   return (
     <div className="p-6 bg-[#0f172a] text-white min-h-screen flex flex-col justify-between">
       <div>
@@ -189,8 +192,8 @@ useEffect(() => {
         <div className="grid grid-cols-12 gap-5 mt-5 h-[calc(100vh-180px)]">
           {/* Video Feed Workspace */}
           <div className="col-span-12 lg:col-span-9 bg-[#1e293b] rounded-2xl p-4 flex items-center justify-center border border-slate-700/50 shadow-inner relative overflow-hidden">
-            <VideoGrid 
-              participants={participants} 
+            <VideoGrid
+              participants={participants}
               localStream={localStream}
               isLocalVideoMuted={isVideoMuted}
             />
@@ -198,7 +201,7 @@ useEffect(() => {
 
           {/* Real-time Side Roster Panel */}
           <div className="col-span-12 lg:col-span-3 bg-[#1e293b] rounded-2xl border border-slate-700/50 shadow-md overflow-hidden">
-            <ParticipantPanel 
+            <ParticipantPanel
               participants={participants}
               localUser={{ userName, role, isAudioMuted, isVideoMuted }}
             />

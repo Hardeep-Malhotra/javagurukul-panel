@@ -27,18 +27,19 @@ import PortalHome from "./pages/student/PortalHome";
 import StudentNavbar from "./components/StudentPortal/StudentNavbar";
 import StudentSidebar from "./components/StudentPortal/StudentSidebar";
 import StudentVideoPlayer from "./pages/student/StudentVideoPlayer";
-import { useStudentAuth } from "./context/StudentAuthContext";
 import StudentMeetingGate from "./pages/student/StudentMeetingGate";
+
+import { useStudentAuth } from "./context/StudentAuthContext";
 
 import socket from "./socket";
 
 // ==========================================
-// Admin Route Guard
+// Admin Protected Route
 // ==========================================
 const ProtectedRoute = () => {
-  const token = localStorage.getItem("adminUser");
+  const admin = localStorage.getItem("adminUser");
 
-  if (!token) {
+  if (!admin) {
     return <Navigate to="/" replace />;
   }
 
@@ -46,13 +47,28 @@ const ProtectedRoute = () => {
 };
 
 // ==========================================
-// Student Route Guard
+// Student Protected Route
 // ==========================================
 const StudentProtectedRoute = () => {
   const { student } = useStudentAuth();
 
   if (!student) {
     return <Navigate to="/student/login" replace />;
+  }
+
+  return <Outlet />;
+};
+
+// ==========================================
+// Common Protected Route
+// Teacher OR Student
+// ==========================================
+const CommonProtectedRoute = () => {
+  const admin = localStorage.getItem("adminUser");
+  const student = localStorage.getItem("studentData");
+
+  if (!admin && !student) {
+    return <Navigate to="/" replace />;
   }
 
   return <Outlet />;
@@ -86,7 +102,9 @@ const StudentLayout = () => {
 // Main App
 // ==========================================
 const App = () => {
+
   useEffect(() => {
+
     socket.on("connect", () => {
       console.log("🟢 Socket Connected :", socket.id);
     });
@@ -99,17 +117,27 @@ const App = () => {
       socket.off("connect");
       socket.off("disconnect");
     };
+
   }, []);
 
   return (
     <Router>
+
       <Routes>
 
+        {/* ========================= */}
         {/* Login */}
+        {/* ========================= */}
+
         <Route path="/" element={<Login />} />
 
+        <Route
+          path="/student/login"
+          element={<StudentLogin />}
+        />
+
         {/* ========================= */}
-        {/* Admin Panel */}
+        {/* Admin Routes */}
         {/* ========================= */}
 
         <Route element={<ProtectedRoute />}>
@@ -143,7 +171,42 @@ const App = () => {
 
           </Route>
 
-          {/* Full Screen Meeting */}
+        </Route>
+
+        {/* ========================= */}
+        {/* Student Routes */}
+        {/* ========================= */}
+
+        <Route element={<StudentProtectedRoute />}>
+
+          <Route element={<StudentLayout />}>
+
+            <Route
+              path="/student/portal"
+              element={<PortalHome />}
+            />
+
+            <Route
+              path="/student/watch/:videoId"
+              element={<StudentVideoPlayer />}
+            />
+
+          </Route>
+
+          <Route
+            path="/student/join-meeting"
+            element={<StudentMeetingGate />}
+          />
+
+        </Route>
+
+        {/* ========================= */}
+        {/* Common Meeting Room */}
+        {/* Teacher + Student */}
+        {/* ========================= */}
+
+        <Route element={<CommonProtectedRoute />}>
+
           <Route
             path="/meeting/:meetingCode"
             element={<MeetingRoom />}
@@ -152,37 +215,7 @@ const App = () => {
         </Route>
 
         {/* ========================= */}
-        {/* Student */}
-        {/* ========================= */}
-
-        <Route
-          path="/student/login"
-          element={<StudentLogin />}
-        />
-
- <Route element={<StudentProtectedRoute />}>
-  <Route element={<StudentLayout />}>
-    <Route
-      path="/student/portal"
-      element={<PortalHome />}
-    />
-
-    <Route
-      path="/student/watch/:videoId"
-      element={<StudentVideoPlayer />}
-    />
-  </Route>
-
-  <Route
-    path="/student/join-meeting"
-    element={<StudentMeetingGate />}
-  />
-
-  <Route
-    path="/meeting/:meetingCode"
-    element={<MeetingRoom />}
-  />
-</Route>
+        {/* 404 */}
         {/* ========================= */}
 
         <Route
@@ -191,6 +224,7 @@ const App = () => {
         />
 
       </Routes>
+
     </Router>
   );
 };
