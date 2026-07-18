@@ -6,13 +6,15 @@ import {
   VideoCameraOutlined,
   DesktopOutlined,
   DisconnectOutlined,
-} from "@ant-design/icons"; // ✅ Fixed imports here too
+} from "@ant-design/icons";
 
 const MeetingControls = ({ 
   isAudioMuted, 
   isVideoMuted, 
+  isScreenSharing,
   onToggleAudio, 
   onToggleVideo, 
+  onToggleScreenShare,
   onLeave 
 }) => {
   return (
@@ -43,19 +45,23 @@ const MeetingControls = ({
               ? "bg-rose-500/20 text-rose-400 hover:bg-rose-500/30" 
               : "bg-slate-700 text-slate-100 hover:bg-slate-600 shadow-md"
           }`}
-          icon={<VideoCameraOutlined />} // ✅ Always use standard icon, state handles color changes
+          icon={<VideoCameraOutlined />} 
           onClick={onToggleVideo}
         />
       </Tooltip>
 
       {/* 🖥️ Screen Share */}
-      <Tooltip title="Share Screen">
+      <Tooltip title={isScreenSharing ? "Stop Sharing" : "Share Screen"}>
         <Button
           shape="circle"
           size="large"
-          className="bg-slate-700 text-slate-100 hover:bg-slate-600 border-none flex items-center justify-center text-lg w-12 h-12 transition-all duration-200"
+          className={`flex items-center justify-center border-none text-lg w-12 h-12 transition-all duration-200 ${
+            isScreenSharing 
+              ? "bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 animate-pulse" 
+              : "bg-slate-700 text-slate-100 hover:bg-slate-600 shadow-md"
+          }`}
           icon={<DesktopOutlined />}
-          onClick={() => alert("Screen sharing setup logic coming up next!")}
+          onClick={onToggleScreenShare}
         />
       </Tooltip>
 

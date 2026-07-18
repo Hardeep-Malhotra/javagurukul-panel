@@ -1,13 +1,18 @@
 // 📄 src/components/Meeting/VideoGrid.jsx
 import { useEffect, useRef } from "react";
 import { Avatar } from "antd";
-import { UserOutlined, VideoCameraOutlined } from "@ant-design/icons"; // ✅ Fixed: Removed 'VideoCameraMinusOutlined'
+import { UserOutlined, VideoCameraOutlined } from "@ant-design/icons";
 
-const VideoGrid = ({ participants = [], localStream, isLocalVideoMuted }) => {
+const VideoGrid = ({
+  participants = [],
+  localStream,
+  remoteStreams = {}, // 🔥 FIX: `remoteStream` ki jagah object map liya
+  isLocalVideoMuted,
+}) => {
   const localVideoRef = useRef(null);
 
   // ==========================================
-  // 🎥 Local Stream Hookup
+  // 🎥 Local Stream Setup
   // ==========================================
   useEffect(() => {
     if (localVideoRef.current && localStream) {
@@ -15,93 +20,82 @@ const VideoGrid = ({ participants = [], localStream, isLocalVideoMuted }) => {
     }
   }, [localStream]);
 
-  // Dynamic Grid Class matching total users (Teacher + Remote Students)
   const totalFeeds = participants.length + 1;
-  const gridLayoutClass = totalFeeds === 1 
-    ? "grid-cols-1 max-w-2xl mx-auto" 
-    : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3";
+
+  const gridLayoutClass =
+    totalFeeds === 1
+      ? "grid-cols-1 max-w-2xl mx-auto"
+      : totalFeeds === 2
+      ? "grid-cols-1 md:grid-cols-2"
+      : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3"; // Multi-user dynamic layout adjustment
 
   return (
     <div className={`grid ${gridLayoutClass} gap-4 w-full h-full p-2 overflow-y-auto`}>
-
-      {/* ==========================================
-          👤 TEACHER FEED (LOCAL USER)
-         ========================================== */}
-      <div className="bg-slate-900 border border-slate-700/60 rounded-2xl aspect-video md:h-full flex flex-col justify-center items-center text-white relative overflow-hidden shadow-lg group">
-        
-        {/* Render Video Element if Stream exists and isn't muted */}
+      {/* ===========================
+          LOCAL USER (TEACHER / YOU)
+      ============================ */}
+      <div className="bg-slate-900 rounded-2xl aspect-video overflow-hidden relative border border-slate-800">
         {localStream && !isLocalVideoMuted ? (
           <video
             ref={localVideoRef}
             autoPlay
             playsInline
-            muted // ⚠️ Keeps teacher from hearing their own loopback echo
-            className="w-full h-full object-cover rounded-2xl transform scale-x-[-1]" // Mirror effect
+            muted
+            className="w-full h-full object-cover transform -scale-x-100" // 🔥 Selfie mirror adjustment
           />
         ) : (
-          /* Fallback Avatar UI when camera is turned off */
-          <div className="flex flex-col items-center">
-            <Avatar
-              size={80}
-              className="bg-slate-700 border-2 border-[#fb991d]/40 shadow-md"
-              icon={<UserOutlined />}
-            />
-            <h3 className="mt-4 text-lg font-semibold text-slate-200">
-              Hardeep Singh (You)
-            </h3>
-            <span className="text-xs bg-[#fb991d]/20 text-[#fb991d] px-2.5 py-0.5 rounded-full mt-2 font-medium tracking-wide">
-              TEACHER
-            </span>
+          <div className="flex flex-col items-center justify-center h-full">
+            <Avatar size={80} icon={<UserOutlined />} />
+            <h3 className="mt-3 font-semibold text-slate-300">You</h3>
           </div>
         )}
 
-        {/* Dynamic Status Overlay Ribbon */}
-        <div className="absolute bottom-3 left-3 flex items-center gap-2 bg-slate-950/70 backdrop-blur-md px-3 py-1.5 rounded-xl border border-slate-800 transition-all duration-300">
-          {localStream && !isLocalVideoMuted ? (
-            <>
-              <VideoCameraOutlined className="text-green-400" />
-              <span className="text-xs text-slate-300 font-medium">Camera Active</span>
-            </>
-          ) : (
-            <>
-              {/* ✅ Fixed: Replaced with standard icon + custom rose styling */}
-              <VideoCameraOutlined className="text-rose-400" /> 
-              <span className="text-xs text-rose-400 font-medium">Camera Off</span>
-            </>
-          )}
+        <div className="absolute bottom-3 left-3 bg-black/60 px-3 py-1 rounded-lg text-sm z-10">
+          You
         </div>
       </div>
 
-      {/* ==========================================
-          👥 REMOTE PARTICIPANTS FEEDS (STUDENTS)
-         ========================================== */}
-      {participants.map((participant) => (
-        <div
-          key={participant.socketId}
-          className="bg-slate-800/90 border border-slate-700/40 rounded-2xl aspect-video md:h-full flex flex-col justify-center items-center text-white relative overflow-hidden shadow-md"
-        >
-          <div className="flex flex-col items-center">
-            <Avatar
-              size={70}
-              className="bg-slate-600 border border-slate-500"
-              icon={<UserOutlined />}
-            />
-            <h3 className="mt-3 font-semibold text-slate-200">
+      {/* ===========================
+          REMOTE PARTICIPANTS (STUDENTS)
+      ============================ */}
+      {participants.map((participant) => {
+        // 🔥 FIX: unique socketId ke basis par map se stream nikali
+        const currentRemoteStream = remoteStreams[participant.socketId];
+
+        return (
+          <div
+            key={participant.socketId}
+            className="bg-slate-900 rounded-2xl aspect-video overflow-hidden relative border border-slate-800"
+          >
+            {currentRemoteStream ? (
+              <video
+                // 🔥 FIX: Loop me common ref hata kar dynamic inner allocation hook use kiya
+                ref={(el) => {
+                  if (el && el.srcObject !== currentRemoteStream) {
+                    el.srcObject = currentRemoteStream;
+                  }
+                }}
+                autoPlay
+                playsInline
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="flex flex-col items-center justify-center h-full">
+                <Avatar size={70} icon={<UserOutlined />} />
+                <h3 className="mt-3 text-slate-300">{participant.userName}</h3>
+                <p className="text-sm text-gray-500 animate-pulse">
+                  Connecting media...
+                </p>
+              </div>
+            )}
+
+            <div className="absolute bottom-3 left-3 bg-black/60 px-3 py-1 rounded-lg text-sm flex items-center gap-2 z-10">
+              <VideoCameraOutlined />
               {participant.userName}
-            </h3>
-            <p className="text-xs text-slate-400 capitalize mt-0.5">
-              {participant.role || "Student"}
-            </p>
+            </div>
           </div>
-
-          {/* Bottom Status Layer */}
-          <div className="absolute bottom-3 left-3 flex items-center gap-2 bg-slate-900/80 backdrop-blur-sm px-3 py-1.5 rounded-xl border border-slate-700/50">
-            <VideoCameraOutlined className="text-slate-400" />
-            <span className="text-xs text-slate-400">Connecting media...</span>
-          </div>
-        </div>
-      ))}
-
+        );
+      })}
     </div>
   );
 };
