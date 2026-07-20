@@ -1,25 +1,15 @@
 // 📄 src/components/Meeting/VideoGrid.jsx
-import { useEffect, useRef } from "react";
 import { Avatar } from "antd";
 import { UserOutlined, VideoCameraOutlined } from "@ant-design/icons";
 
 const VideoGrid = ({
   participants = [],
   localStream,
-  remoteStreams = {}, // 🔥 FIX: `remoteStream` ki jagah object map liya
+  remoteStreams = {},
   isLocalVideoMuted,
+  isScreenSharing = false,
+  screenStream = null,
 }) => {
-  const localVideoRef = useRef(null);
-
-  // ==========================================
-  // 🎥 Local Stream Setup
-  // ==========================================
-  useEffect(() => {
-    if (localVideoRef.current && localStream) {
-      localVideoRef.current.srcObject = localStream;
-    }
-  }, [localStream]);
-
   const totalFeeds = participants.length + 1;
 
   const gridLayoutClass =
@@ -29,19 +19,37 @@ const VideoGrid = ({
       ? "grid-cols-1 md:grid-cols-2"
       : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3"; // Multi-user dynamic layout adjustment
 
+  // 🔥 FIX: jab screen share on ho, local box me screen dikhani hai;
+  // warna camera. Isse teacher ko apni khud ki screen ka preview milta hai.
+  const activeLocalStream = isScreenSharing && screenStream ? screenStream : localStream;
+  const shouldShowLocalVideo =
+    activeLocalStream && (isScreenSharing ? true : !isLocalVideoMuted);
+
   return (
     <div className={`grid ${gridLayoutClass} gap-4 w-full h-full p-2 overflow-y-auto`}>
       {/* ===========================
           LOCAL USER (TEACHER / YOU)
       ============================ */}
       <div className="bg-slate-900 rounded-2xl aspect-video overflow-hidden relative border border-slate-800">
-        {localStream && !isLocalVideoMuted ? (
+        {shouldShowLocalVideo ? (
           <video
-            ref={localVideoRef}
+            // 🔥 FIX: callback ref instead of useRef+useEffect([localStream]).
+            // Purane code me jab video element mute hone par unmount hoti thi,
+            // wapas mount hone par srcObject kabhi set hi nahi hota tha
+            // (effect [localStream] pe hi depend karta tha, jo change nahi hota),
+            // isliye camera dobara ON karne par screen black rehti thi.
+            // Ab har mount/update par srcObject ko sahi stream se sync kiya jaata hai.
+            ref={(el) => {
+              if (el && el.srcObject !== activeLocalStream) {
+                el.srcObject = activeLocalStream;
+              }
+            }}
             autoPlay
             playsInline
             muted
-            className="w-full h-full object-cover transform -scale-x-100" // 🔥 Selfie mirror adjustment
+            className={`w-full h-full object-cover ${
+              isScreenSharing ? "" : "transform -scale-x-100"
+            }`} // Selfie mirror sirf camera ke liye, screen share ke liye nahi
           />
         ) : (
           <div className="flex flex-col items-center justify-center h-full">
@@ -51,7 +59,7 @@ const VideoGrid = ({
         )}
 
         <div className="absolute bottom-3 left-3 bg-black/60 px-3 py-1 rounded-lg text-sm z-10">
-          You
+          {isScreenSharing ? "You (Screen)" : "You"}
         </div>
       </div>
 
@@ -59,7 +67,6 @@ const VideoGrid = ({
           REMOTE PARTICIPANTS (STUDENTS)
       ============================ */}
       {participants.map((participant) => {
-        // 🔥 FIX: unique socketId ke basis par map se stream nikali
         const currentRemoteStream = remoteStreams[participant.socketId];
 
         return (
@@ -69,7 +76,6 @@ const VideoGrid = ({
           >
             {currentRemoteStream ? (
               <video
-                // 🔥 FIX: Loop me common ref hata kar dynamic inner allocation hook use kiya
                 ref={(el) => {
                   if (el && el.srcObject !== currentRemoteStream) {
                     el.srcObject = currentRemoteStream;

@@ -17,35 +17,44 @@ const MeetingRoom = () => {
   const navigate = useNavigate();
 
   // 👥 States
-  const [meetingData, setMeetingData] = useState(null); 
+  const [meetingData, setMeetingData] = useState(null);
   const [participants, setParticipants] = useState([]);
   const [localStream, setLocalStream] = useState(null);
-  const [remoteStreams, setRemoteStreams] = useState({}); 
+  const [remoteStreams, setRemoteStreams] = useState({});
 
   const [isAudioMuted, setIsAudioMuted] = useState(false);
   const [isVideoMuted, setIsVideoMuted] = useState(false);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
 
+  // 🖥️ FIX: screen stream ab state me bhi track hota hai taaki
+  // local preview (teacher ki apni screen ka thumbnail) render ho sake
+  const [screenStream, setScreenStream] = useState(null);
+
   // 🔄 WebRTC Map References
-  const peerConnections = useRef({}); 
+  const peerConnections = useRef({});
   const localStreamRef = useRef(null);
   const screenStreamRef = useRef(null);
-  const videoSenders = useRef({}); 
+  const videoSenders = useRef({});
 
   // 🔑 Role Engine
   const { student } = useStudentAuth();
   const adminCookie = Cookies.get("adminUser");
   const adminLocal = localStorage.getItem("adminUser");
-  const adminData = adminCookie ? JSON.parse(adminCookie) : (adminLocal ? JSON.parse(adminLocal) : null);
+  const adminData = adminCookie
+    ? JSON.parse(adminCookie)
+    : adminLocal
+      ? JSON.parse(adminLocal)
+      : null;
 
-  const isAdmin = !!adminData && (adminData.role === "ADMIN" || adminData.role === "Teacher");
+  const isAdmin =
+    !!adminData && (adminData.role === "ADMIN" || adminData.role === "Teacher");
 
   let role = "Student";
   let userName = student?.name || `Student-${Math.floor(Math.random() * 100)}`;
 
   if (isAdmin) {
     role = "Teacher";
-    userName = meetingData?.teacherName || adminData?.name || "Hardeep Singh"; 
+    userName = meetingData?.teacherName || adminData?.name || "Hardeep Singh";
   }
 
   useEffect(() => {
@@ -124,19 +133,30 @@ const MeetingRoom = () => {
     initLocalMedia();
 
     return () => {
-      if (localStreamRef.current) localStreamRef.current.getTracks().forEach((t) => t.stop());
-      if (screenStreamRef.current) screenStreamRef.current.getTracks().forEach((t) => t.stop());
+      if (localStreamRef.current)
+        localStreamRef.current.getTracks().forEach((t) => t.stop());
+      if (screenStreamRef.current)
+        screenStreamRef.current.getTracks().forEach((t) => t.stop());
       Object.values(peerConnections.current).forEach((pc) => pc.close());
     };
   }, []);
 
   // ==========================================
-  // 🔌 SIGNALLING ENGINE (Controls Handshake)
+  // 🔌 4. SIGNALLING LIFECYCLE (Dono Taraf se Safe Handshake)
   // ==========================================
   useEffect(() => {
     if (!meetingData || !localStream) return;
 
     socket.emit("join-meeting", { meetingCode, userName, role });
+
+    // Jab aap join karte ho, server batata hai ki pehle se kaun kaun baitha hai
+    socket.on("get-existing-users", (users) => {
+      users.forEach((user) => {
+        if (role === "Student" && user.role === "Teacher") {
+          createPeerConnection(user.socketId);
+        }
+      });
+    });
 
     socket.on("participant-joined", async (data) => {
       setParticipants((prev) => {
@@ -144,15 +164,21 @@ const MeetingRoom = () => {
         return [...prev, data];
       });
 
-      // If a student joins, Teacher initiates offer right away
+      message.success(`${data.userName} joined.`);
+
+      // Rule: Hamesha Teacher automatic call initiate karega incoming student ke liye
       if (role === "Teacher") {
         const pc = createPeerConnection(data.socketId);
         try {
           const offer = await pc.createOffer();
           await pc.setLocalDescription(offer);
-          socket.emit("send-offer", { meetingCode, offer, targetSocketId: data.socketId });
+          socket.emit("send-offer", {
+            meetingCode,
+            offer,
+            targetSocketId: data.socketId,
+          });
         } catch (err) {
-          console.error("Offer failed:", err);
+          console.error("Offer initiation structural error:", err);
         }
       }
     });
@@ -163,9 +189,13 @@ const MeetingRoom = () => {
         await pc.setRemoteDescription(new RTCSessionDescription(offer));
         const answer = await pc.createAnswer();
         await pc.setLocalDescription(answer);
-        socket.emit("send-answer", { meetingCode, answer, targetSocketId: senderSocketId });
+        socket.emit("send-answer", {
+          meetingCode,
+          answer,
+          targetSocketId: senderSocketId,
+        });
       } catch (err) {
-        console.error("Answer loop crash:", err);
+        console.error("Answer negotiation crash:", err);
       }
     });
 
@@ -175,30 +205,34 @@ const MeetingRoom = () => {
         try {
           await pc.setRemoteDescription(new RTCSessionDescription(answer));
         } catch (err) {
-          console.error("Remote description error:", err);
+          console.error("Remote description injection fault:", err);
         }
       }
     });
 
-    socket.on("receive-ice-candidate", async ({ candidate, senderSocketId }) => {
-      const pc = peerConnections.current[senderSocketId];
-      if (pc && candidate) {
-        try {
-          await pc.addIceCandidate(new RTCIceCandidate(candidate));
-        } catch (err) {
-          console.error("ICE error:", err);
+    socket.on(
+      "receive-ice-candidate",
+      async ({ candidate, senderSocketId }) => {
+        const pc = peerConnections.current[senderSocketId];
+        if (pc && candidate) {
+          try {
+            await pc.addIceCandidate(new RTCIceCandidate(candidate));
+          } catch (err) {
+            console.error("ICE candidate binding failure:", err);
+          }
         }
-      }
-    });
+      },
+    );
 
-    // 💥 Auto-kick students when teacher leaves/closes the room
     socket.on("meeting-ended", () => {
       message.warning("The session has been ended by the teacher.");
       handleCleanupAndRedirect("/student/portal");
     });
 
     socket.on("participant-left", (data) => {
-      setParticipants((prev) => prev.filter((p) => p.socketId !== data.socketId));
+      setParticipants((prev) =>
+        prev.filter((p) => p.socketId !== data.socketId),
+      );
       setRemoteStreams((prev) => {
         const updated = { ...prev };
         delete updated[data.socketId];
@@ -208,10 +242,17 @@ const MeetingRoom = () => {
         peerConnections.current[data.socketId].close();
         delete peerConnections.current[data.socketId];
       }
+      // 🔥 FIX: videoSenders map pehle kabhi clean nahi hoti thi.
+      // Stale entry rehne se screen-share replaceTrack loop disconnect ho
+      // chuke/reconnect hue socketId ko bhi target kar sakta tha.
+      if (videoSenders.current[data.socketId]) {
+        delete videoSenders.current[data.socketId];
+      }
     });
 
     return () => {
       socket.emit("leave-meeting", { meetingCode, userName });
+      socket.off("get-existing-users");
       socket.off("participant-joined");
       socket.off("participant-left");
       socket.off("receive-offer");
@@ -230,7 +271,9 @@ const MeetingRoom = () => {
       if (audioTrack) {
         audioTrack.enabled = !audioTrack.enabled;
         setIsAudioMuted(!audioTrack.enabled);
-        message.info(audioTrack.enabled ? "Microphone Active" : "Microphone Muted");
+        message.info(
+          audioTrack.enabled ? "Microphone Active" : "Microphone Muted",
+        );
       }
     }
   };
@@ -241,7 +284,9 @@ const MeetingRoom = () => {
       if (videoTrack) {
         videoTrack.enabled = !videoTrack.enabled;
         setIsVideoMuted(!videoTrack.enabled);
-        message.info(videoTrack.enabled ? "Camera Active" : "Camera Turned Off");
+        message.info(
+          videoTrack.enabled ? "Camera Active" : "Camera Turned Off",
+        );
       }
     }
   };
@@ -252,9 +297,13 @@ const MeetingRoom = () => {
       return;
     }
     try {
-      const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
-      screenStreamRef.current = screenStream;
-      const screenTrack = screenStream.getVideoTracks()[0];
+      const stream = await navigator.mediaDevices.getDisplayMedia({
+        video: true,
+        audio: true,
+      });
+      screenStreamRef.current = stream;
+      setScreenStream(stream); // 🔥 FIX: state update so local preview re-renders
+      const screenTrack = stream.getVideoTracks()[0];
 
       // Hot-swap tracking pipelines dynamically across all participants
       for (const socketId in videoSenders.current) {
@@ -274,6 +323,7 @@ const MeetingRoom = () => {
     if (screenStreamRef.current) {
       screenStreamRef.current.getTracks().forEach((track) => track.stop());
       screenStreamRef.current = null;
+      setScreenStream(null); // 🔥 FIX: clear preview state too
     }
     if (localStreamRef.current) {
       const cameraTrack = localStreamRef.current.getVideoTracks()[0];
@@ -288,8 +338,10 @@ const MeetingRoom = () => {
   };
 
   const handleCleanupAndRedirect = (targetRoute) => {
-    if (localStreamRef.current) localStreamRef.current.getTracks().forEach((t) => t.stop());
-    if (screenStreamRef.current) screenStreamRef.current.getTracks().forEach((t) => t.stop());
+    if (localStreamRef.current)
+      localStreamRef.current.getTracks().forEach((t) => t.stop());
+    if (screenStreamRef.current)
+      screenStreamRef.current.getTracks().forEach((t) => t.stop());
     Object.values(peerConnections.current).forEach((pc) => pc.close());
     navigate(targetRoute);
   };
@@ -318,8 +370,10 @@ const MeetingRoom = () => {
             <VideoGrid
               participants={participants}
               localStream={localStream}
-              remoteStreams={remoteStreams} 
+              remoteStreams={remoteStreams}
               isLocalVideoMuted={isVideoMuted}
+              isScreenSharing={isScreenSharing}
+              screenStream={screenStream}
             />
           </div>
 
