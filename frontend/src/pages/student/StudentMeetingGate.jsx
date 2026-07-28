@@ -1,42 +1,15 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Card, Typography, Input, Button, message } from "antd";
-import { useNavigate, useSearchParams } from "react-router-dom";
 
-import {
-  verifyMeetingAPI,
-  joinMeetingAPI,
-} from "../../services/meetingService";
+import { getMeetingByIdAPI } from "../../services/meetingService";
 
-import { useStudentAuth } from "../../context/StudentAuthContext";
 const { Title, Text } = Typography;
 
 const StudentMeetingGate = () => {
-  const { student } = useStudentAuth();
-  const navigate = useNavigate();
-
-  const [searchParams] = useSearchParams();
-
   const [meetingCode, setMeetingCode] = useState("");
-
   const [loading, setLoading] = useState(false);
 
-  // ==========================================
-  // Auto Fill Meeting Code
-  // ==========================================
-
-  useEffect(() => {
-    const code = searchParams.get("code");
-
-    if (code) {
-      setMeetingCode(code);
-    }
-  }, []);
-
-  // ==========================================
-  // Verify Meeting
-  // ==========================================
-
-  const handleVerify = async () => {
+  const handleJoin = async () => {
     if (!meetingCode.trim()) {
       return message.warning("Please enter meeting code.");
     }
@@ -44,20 +17,21 @@ const StudentMeetingGate = () => {
     try {
       setLoading(true);
 
-      const response = await verifyMeetingAPI(meetingCode);
+      const response = await getMeetingByIdAPI(meetingCode);
 
       if (response.success) {
-        await joinMeetingAPI({
-          meetingCode,
-          studentId: student.id,
-        });
+        const meeting = response.data;
 
-        message.success("Meeting Verified.");
+        if (!meeting.zoomMeetingLink) {
+          return message.error("Zoom Meeting Link not found.");
+        }
 
-        navigate(`/meeting/${meetingCode}`);
+        window.open(meeting.zoomMeetingLink, "_blank");
       }
     } catch (error) {
-      message.error(error.response?.data?.message || "Invalid Meeting Code.");
+      message.error(
+        error.response?.data?.message || "Invalid Meeting Code."
+      );
     } finally {
       setLoading(false);
     }
@@ -73,10 +47,10 @@ const StudentMeetingGate = () => {
             className="h-16 mx-auto mb-4"
           />
 
-          <Title level={2}>Secure Live Classroom</Title>
+          <Title level={2}>Join Live Class</Title>
 
           <Text type="secondary">
-            Verify your Meeting Code to join the live class.
+            Enter your Meeting Code to join the Zoom Live Class.
           </Text>
         </div>
 
@@ -94,9 +68,9 @@ const StudentMeetingGate = () => {
             size="large"
             loading={loading}
             className="bg-[#fb991d]"
-            onClick={handleVerify}
+            onClick={handleJoin}
           >
-            Verify & Join Meeting
+            Join Live Class
           </Button>
         </div>
       </Card>

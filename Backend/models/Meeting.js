@@ -1,41 +1,20 @@
 const mongoose = require("mongoose");
 
-// ==========================================
-// Participant Schema
-// ==========================================
-const participantSchema = new mongoose.Schema(
-  {
-    studentId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Student",
-      required: true,
-    },
-
-    studentName: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-
-    joinedAt: {
-      type: Date,
-      default: Date.now,
-    },
-  },
-  { _id: false },
-);
-
-// ==========================================
-// Meeting Schema
-// ==========================================
 const meetingSchema = new mongoose.Schema(
   {
-    // Meeting Code
+    // Unique Meeting Code
     meetingCode: {
       type: String,
       required: true,
       unique: true,
       index: true,
+      trim: true,
+    },
+
+    // Zoom Meeting Link
+    zoomMeetingLink: {
+      type: String,
+      required: true,
       trim: true,
     },
 
@@ -60,6 +39,7 @@ const meetingSchema = new mongoose.Schema(
       trim: true,
     },
 
+    // Scheduled Date & Time
     scheduledAt: {
       type: Date,
       required: true,
@@ -68,48 +48,26 @@ const meetingSchema = new mongoose.Schema(
     // Meeting Status
     status: {
       type: String,
-      enum: ["waiting", "live", "ended"],
-      default: "waiting",
+      enum: ["scheduled", "live", "ended"],
+      default: "scheduled",
     },
 
-    // Students Joined
-    participants: [participantSchema],
-
-    // Meeting Start Time
-    startTime: {
-      type: Date,
-      default: Date.now,
-    },
-
-    // Meeting End Time
-    endTime: {
-      type: Date,
-      default: null,
-    },
-
-    // Screen Share Status
-    screenShare: {
-      isActive: {
-        type: Boolean,
-        default: false,
-      },
-
-      startedAt: {
-        type: Date,
-        default: null,
-      },
-    },
-
-    // Audio Recording Path
+    // Audio Recording Path (Future AI Notes)
     audioRecordingPath: {
       type: String,
       default: "",
     },
 
-    // Complete Transcript
+    // Speech-to-Text Transcript
     transcript: {
       type: String,
       default: "",
+    },
+
+    // Transcript Generated
+    transcriptGenerated: {
+      type: Boolean,
+      default: false,
     },
 
     // AI Notes Status
@@ -119,10 +77,16 @@ const meetingSchema = new mongoose.Schema(
       default: "none",
     },
 
-    // Reference of Generated Notes
+    // Generated Lecture Notes Reference
     associatedNotesId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "LectureNotes",
+      default: null,
+    },
+
+    // Meeting End Time
+    endTime: {
+      type: Date,
       default: null,
     },
   },

@@ -1,14 +1,9 @@
 const Meeting = require("../../models/Meeting");
 
-const {
-  endMeetingSchema,
-} = require("../../validators/endMeetingValidator");
+const { endMeetingSchema } = require("../../validators/endMeetingValidator");
 
 const endMeeting = async (req, res, next) => {
   try {
-    // ==========================
-    // Joi Validation
-    // ==========================
     const { error } = endMeetingSchema.validate(req.params);
 
     if (error) {
@@ -17,9 +12,6 @@ const endMeeting = async (req, res, next) => {
 
     const { meetingId } = req.params;
 
-    // ==========================
-    // Find Meeting
-    // ==========================
     const meeting = await Meeting.findById(meetingId);
 
     if (!meeting) {
@@ -29,49 +21,26 @@ const endMeeting = async (req, res, next) => {
       });
     }
 
-    // ==========================
-    // Meeting Already Ended
-    // ==========================
     if (meeting.status === "ended") {
       return res.status(400).json({
         success: false,
-        message: "Meeting has already ended.",
+        message: "Meeting already ended.",
       });
     }
 
-    // ==========================
-    // Meeting Not Started
-    // ==========================
-    if (meeting.status === "waiting") {
-      return res.status(400).json({
-        success: false,
-        message: "Meeting has not started yet.",
-      });
-    }
-
-    // ==========================
-    // End Meeting
-    // ==========================
+    // End Live Class
     meeting.status = "ended";
     meeting.endTime = new Date();
 
+    // Future AI Pipeline
+    meeting.notesStatus = "processing";
+
     await meeting.save();
 
-    // ==========================
-    // Success Response
-    // ==========================
     return res.status(200).json({
       success: true,
-      message: "Meeting ended successfully.",
-      data: {
-        meetingId: meeting._id,
-        meetingCode: meeting.meetingCode,
-        title: meeting.title,
-        batch: meeting.batch,
-        status: meeting.status,
-        startTime: meeting.startTime,
-        endTime: meeting.endTime,
-      },
+      message: "Live Class ended successfully.",
+      data: meeting,
     });
   } catch (error) {
     next(error);

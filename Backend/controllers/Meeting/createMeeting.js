@@ -9,7 +9,7 @@ const { createMeetingSchema } = require("../../validators/meetingValidator");
 const createMeeting = async (req, res, next) => {
   try {
     // ==========================
-    // Joi Validation
+    // Validation
     // ==========================
     const { error } = createMeetingSchema.validate(req.body);
 
@@ -17,62 +17,46 @@ const createMeeting = async (req, res, next) => {
       return next(error);
     }
 
-    const { title, batch, teacherName, scheduledAt } = req.body;
+    const { title, batch, teacherName, scheduledAt, zoomMeetingLink } =
+      req.body;
 
     // ==========================
-    // Generate Unique Meeting Code
+    // Generate Meeting Code
     // ==========================
     let meetingCode;
     let isUnique = false;
-    let attempts = 0;
 
-    while (!isUnique && attempts < 10) {
+    while (!isUnique) {
       meetingCode = generateMeetingCode();
 
-      const existingMeeting = await Meeting.findOne({
-        meetingCode,
-        status: {
-          $in: ["waiting", "live"],
-        },
-      });
+      const exists = await Meeting.findOne({ meetingCode });
 
-      if (!existingMeeting) {
+      if (!exists) {
         isUnique = true;
       }
-
-      attempts++;
-    }
-
-    // Safety Check
-    if (!isUnique) {
-      return res.status(500).json({
-        success: false,
-        message: "Unable to generate unique meeting code. Please try again.",
-      });
     }
 
     // ==========================
     // Create Meeting
     // ==========================
-    const newMeeting = await Meeting.create({
+    const meeting = await Meeting.create({
       meetingCode,
+      zoomMeetingLink,
       title,
       batch,
       teacherName,
       scheduledAt,
-      status: "waiting",
+      status: "scheduled",
     });
 
     // ==========================
-    // Send Email To All Students
+    // Send Email
     // ==========================
 
     const students = await Student.find({
       batch,
       status: "Active",
     });
-
-    const meetingLink = `http://localhost:5173/student/join-meeting?code=${meetingCode}`;
 
     for (const student of students) {
       const html = meetingScheduleTemplate({
@@ -82,7 +66,7 @@ const createMeeting = async (req, res, next) => {
         batch,
         meetingCode,
         scheduledAt,
-        meetingLink,
+        meetingLink: zoomMeetingLink,
       });
 
       await sendEmail({
@@ -92,25 +76,13 @@ const createMeeting = async (req, res, next) => {
       });
     }
 
-    // ==========================
-    // Success Response
-    // ==========================
     return res.status(201).json({
       success: true,
-      message: `Meeting created successfully. Email sent to ${students.length} students.`,
-      data: {
-        meetingId: newMeeting._id,
-        meetingCode: newMeeting.meetingCode,
-        title: newMeeting.title,
-        batch: newMeeting.batch,
-        teacherName: newMeeting.teacherName,
-        scheduledAt: newMeeting.scheduledAt,
-        status: newMeeting.status,
-        createdAt: newMeeting.createdAt,
-      },
+      message: "Live Class Scheduled Successfully.",
+      data: meeting,
     });
-  } catch (error) {
-    next(error);
+  } catch (err) {
+    next(err);
   }
 };
 

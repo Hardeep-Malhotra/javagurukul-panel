@@ -1,5 +1,13 @@
 import { useEffect, useState } from "react";
-import { Modal, Form, Input, Select, Button, DatePicker, message } from "antd";
+import {
+  Modal,
+  Form,
+  Input,
+  Select,
+  Button,
+  DatePicker,
+  message,
+} from "antd";
 
 import dayjs from "dayjs";
 import Cookies from "js-cookie";
@@ -13,9 +21,9 @@ const CreateMeetingModal = ({ open, onClose, onRefresh }) => {
   const [loading, setLoading] = useState(false);
   const [batches, setBatches] = useState([]);
 
-  // ==========================================
+  // ==========================
   // Logged In Admin
-  // ==========================================
+  // ==========================
 
   const savedUser = Cookies.get("adminUser");
 
@@ -25,9 +33,9 @@ const CreateMeetingModal = ({ open, onClose, onRefresh }) => {
         name: "",
       };
 
-  // ==========================================
-  // Load All Batches
-  // ==========================================
+  // ==========================
+  // Load Batches
+  // ==========================
 
   const loadBatches = async () => {
     try {
@@ -42,10 +50,6 @@ const CreateMeetingModal = ({ open, onClose, onRefresh }) => {
     }
   };
 
-  // ==========================================
-  // Open Modal
-  // ==========================================
-
   useEffect(() => {
     if (open) {
       loadBatches();
@@ -56,9 +60,9 @@ const CreateMeetingModal = ({ open, onClose, onRefresh }) => {
     }
   }, [open]);
 
-  // ==========================================
-  // Batch Change
-  // ==========================================
+  // ==========================
+  // Auto Fill Title
+  // ==========================
 
   const handleBatchChange = (batchName) => {
     const currentTitle = form.getFieldValue("title");
@@ -70,9 +74,9 @@ const CreateMeetingModal = ({ open, onClose, onRefresh }) => {
     }
   };
 
-  // ==========================================
-  // Create Meeting
-  // ==========================================
+  // ==========================
+  // Submit
+  // ==========================
 
   const handleSubmit = async (values) => {
     try {
@@ -86,7 +90,7 @@ const CreateMeetingModal = ({ open, onClose, onRefresh }) => {
       const response = await createMeetingAPI(payload);
 
       if (response.success) {
-        message.success(response.message);
+        message.success("Live Class Scheduled Successfully.");
 
         form.resetFields();
 
@@ -100,15 +104,17 @@ const CreateMeetingModal = ({ open, onClose, onRefresh }) => {
       console.error(error);
 
       message.error(
-        error.response?.data?.message || "Failed to create meeting.",
+        error.response?.data?.message ||
+          "Failed to schedule live class."
       );
     } finally {
       setLoading(false);
     }
   };
+
   return (
     <Modal
-      title="Create Live Meeting"
+      title="Schedule Live Class"
       open={open}
       footer={null}
       centered
@@ -118,20 +124,24 @@ const CreateMeetingModal = ({ open, onClose, onRefresh }) => {
         onClose();
       }}
     >
-      <Form form={form} layout="vertical" onFinish={handleSubmit}>
-        {/* Meeting Title */}
+      <Form
+        form={form}
+        layout="vertical"
+        onFinish={handleSubmit}
+      >
+        {/* Live Class Title */}
 
         <Form.Item
-          label="Meeting Title"
+          label="Live Class Title"
           name="title"
           rules={[
             {
               required: true,
-              message: "Please enter meeting title.",
+              message: "Please enter live class title.",
             },
           ]}
         >
-          <Input placeholder="JavaScript Live Class" />
+          <Input placeholder="React Hooks Masterclass" />
         </Form.Item>
 
         {/* Batch */}
@@ -142,7 +152,7 @@ const CreateMeetingModal = ({ open, onClose, onRefresh }) => {
           rules={[
             {
               required: true,
-              message: "Please select a batch.",
+              message: "Please select batch.",
             },
           ]}
         >
@@ -153,14 +163,17 @@ const CreateMeetingModal = ({ open, onClose, onRefresh }) => {
             onChange={handleBatchChange}
           >
             {batches.map((batch) => (
-              <Select.Option key={batch._id} value={batch.batchName}>
+              <Select.Option
+                key={batch._id}
+                value={batch.batchName}
+              >
                 {batch.batchName}
               </Select.Option>
             ))}
           </Select>
         </Form.Item>
 
-        {/* Teacher Name */}
+        {/* Teacher */}
 
         <Form.Item
           label="Teacher Name"
@@ -175,15 +188,34 @@ const CreateMeetingModal = ({ open, onClose, onRefresh }) => {
           <Input placeholder="Teacher Name" />
         </Form.Item>
 
-        {/* Meeting Schedule */}
+        {/* Zoom Meeting Link */}
 
         <Form.Item
-          label="Meeting Date & Time"
+          label="Zoom Meeting Link"
+          name="zoomMeetingLink"
+          rules={[
+            {
+              required: true,
+              message: "Please enter Zoom Meeting Link.",
+            },
+            {
+              type: "url",
+              message: "Please enter a valid Zoom Meeting Link.",
+            },
+          ]}
+        >
+          <Input placeholder="https://zoom.us/j/1234567890" />
+        </Form.Item>
+
+        {/* Schedule */}
+
+        <Form.Item
+          label="Class Date & Time"
           name="scheduledAt"
           rules={[
             {
               required: true,
-              message: "Please select meeting date & time.",
+              message: "Please select class date & time.",
             },
           ]}
         >
@@ -203,9 +235,9 @@ const CreateMeetingModal = ({ open, onClose, onRefresh }) => {
           htmlType="submit"
           loading={loading}
           block
-          className="bg-[#fb991d]"
+          className="bg-[#fb991d] border-none"
         >
-          Create Meeting
+          Schedule Live Class
         </Button>
       </Form>
     </Modal>

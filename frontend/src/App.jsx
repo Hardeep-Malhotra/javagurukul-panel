@@ -1,6 +1,6 @@
 // 📄 src/App.jsx
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   BrowserRouter as Router,
   Routes,
@@ -11,27 +11,32 @@ import {
 
 import Login from "./pages/Login";
 
+// ==========================
 // Admin Pages
+// ==========================
 import Dashboard from "./pages/Dashboard";
 import StudentManagement from "./pages/StudentManagement";
 import BatchManagement from "./pages/BatchManagement";
 import VideoManagement from "./pages/VideoManagement";
 import MeetingManagement from "./pages/MeetingManagement";
-import MeetingRoom from "./pages/MeetingRoom";
 
 import AdminLayout from "./components/Layout/AdminLayout";
 
-// Student Portal
+// ==========================
+// Student Pages
+// ==========================
 import StudentLogin from "./pages/student/StudentLogin";
 import PortalHome from "./pages/student/PortalHome";
-import StudentNavbar from "./components/StudentPortal/StudentNavbar";
-import StudentSidebar from "./components/StudentPortal/StudentSidebar";
 import StudentVideoPlayer from "./pages/student/StudentVideoPlayer";
 import StudentMeetingGate from "./pages/student/StudentMeetingGate";
 
-import { useStudentAuth } from "./context/StudentAuthContext";
+// ==========================
+// Student Components
+// ==========================
+import StudentNavbar from "./components/StudentPortal/StudentNavbar";
+import StudentSidebar from "./components/StudentPortal/StudentSidebar";
 
-import socket from "./socket";
+import { useStudentAuth } from "./context/StudentAuthContext";
 
 // ==========================================
 // Admin Protected Route
@@ -54,21 +59,6 @@ const StudentProtectedRoute = () => {
 
   if (!student) {
     return <Navigate to="/student/login" replace />;
-  }
-
-  return <Outlet />;
-};
-
-// ==========================================
-// Common Protected Route
-// Teacher OR Student
-// ==========================================
-const CommonProtectedRoute = () => {
-  const admin = localStorage.getItem("adminUser");
-  const student = localStorage.getItem("studentData");
-
-  if (!admin && !student) {
-    return <Navigate to="/" replace />;
   }
 
   return <Outlet />;
@@ -102,46 +92,22 @@ const StudentLayout = () => {
 // Main App
 // ==========================================
 const App = () => {
-
-  useEffect(() => {
-
-    socket.on("connect", () => {
-      console.log("🟢 Socket Connected :", socket.id);
-    });
-
-    socket.on("disconnect", () => {
-      console.log("🔴 Socket Disconnected");
-    });
-
-    return () => {
-      socket.off("connect");
-      socket.off("disconnect");
-    };
-
-  }, []);
-
   return (
     <Router>
-
       <Routes>
 
         {/* ========================= */}
-        {/* Login */}
+        {/* Authentication */}
         {/* ========================= */}
 
         <Route path="/" element={<Login />} />
-
-        <Route
-          path="/student/login"
-          element={<StudentLogin />}
-        />
+        <Route path="/student/login" element={<StudentLogin />} />
 
         {/* ========================= */}
         {/* Admin Routes */}
         {/* ========================= */}
 
         <Route element={<ProtectedRoute />}>
-
           <Route element={<AdminLayout />}>
 
             <Route
@@ -170,7 +136,6 @@ const App = () => {
             />
 
           </Route>
-
         </Route>
 
         {/* ========================= */}
@@ -201,20 +166,6 @@ const App = () => {
         </Route>
 
         {/* ========================= */}
-        {/* Common Meeting Room */}
-        {/* Teacher + Student */}
-        {/* ========================= */}
-
-        <Route element={<CommonProtectedRoute />}>
-
-          <Route
-            path="/meeting/:meetingCode"
-            element={<MeetingRoom />}
-          />
-
-        </Route>
-
-        {/* ========================= */}
         {/* 404 */}
         {/* ========================= */}
 
@@ -224,7 +175,6 @@ const App = () => {
         />
 
       </Routes>
-
     </Router>
   );
 };

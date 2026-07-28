@@ -3,7 +3,7 @@ import axios from "axios";
 const API_URL = "http://localhost:5000/api/meeting";
 
 // ==========================================
-// Create Meeting
+// Create Live Class
 // ==========================================
 export const createMeetingAPI = async (meetingData) => {
   const response = await axios.post(
@@ -18,7 +18,7 @@ export const createMeetingAPI = async (meetingData) => {
 };
 
 // ==========================================
-// Get All Meetings
+// Get All Live Classes
 // ==========================================
 export const getAllMeetingsAPI = async () => {
   const response = await axios.get(
@@ -32,7 +32,7 @@ export const getAllMeetingsAPI = async () => {
 };
 
 // ==========================================
-// Get Meeting By Id
+// Get Live Class By ID
 // ==========================================
 export const getMeetingByIdAPI = async (meetingId) => {
   const response = await axios.get(
@@ -46,60 +46,12 @@ export const getMeetingByIdAPI = async (meetingId) => {
 };
 
 // ==========================================
-// Join Meeting
-// ==========================================
-export const joinMeetingAPI = async (meetingData) => {
-  const response = await axios.post(
-    `${API_URL}/join`,
-    meetingData,
-    {
-      withCredentials: true,
-    }
-  );
-
-  return response.data;
-};
-
-// ==========================================
-// Start Meeting
-// ==========================================
-export const startMeetingAPI = async (meetingId) => {
-  const response = await axios.put(
-    `${API_URL}/start/${meetingId}`,
-    {},
-    {
-      withCredentials: true,
-    }
-  );
-
-  return response.data;
-};
-
-// ==========================================
-// End Meeting
+// End Live Class
 // ==========================================
 export const endMeetingAPI = async (meetingId) => {
   const response = await axios.put(
     `${API_URL}/end/${meetingId}`,
     {},
-    {
-      withCredentials: true,
-    }
-  );
-
-  return response.data;
-};
-
-// ==========================================
-// Verify Meeting
-// ==========================================
-
-export const verifyMeetingAPI = async (meetingCode) => {
-  const response = await axios.post(
-    `${API_URL}/verify`,
-    {
-      meetingCode,
-    },
     {
       withCredentials: true,
     }

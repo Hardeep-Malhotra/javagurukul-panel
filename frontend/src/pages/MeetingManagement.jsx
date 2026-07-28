@@ -9,74 +9,82 @@ import CreateMeetingModal from "../components/Meeting/CreateMeetingModal";
 const MeetingManagement = () => {
   const [meetings, setMeetings] = useState([]);
   const [loading, setLoading] = useState(false);
-
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
-const fetchMeetings = async () => {
+  // ==========================
+  // Fetch Live Classes
+  // ==========================
+  const fetchMeetings = async () => {
     try {
-      setLoading(true); 
+      setLoading(true);
+
       const response = await getAllMeetingsAPI();
 
       if (response.success) {
         setMeetings(response.data);
       }
     } catch (error) {
-      console.log(error);
-      message.error("Failed to load meetings.");
+      console.error(error);
+      message.error("Failed to load live classes.");
     } finally {
       setLoading(false);
     }
   };
+
   useEffect(() => {
-    setLoading(true);
     fetchMeetings();
   }, []);
 
   return (
-    <div className="p-1">
+    <div className="p-5">
 
-      {/* Header */}
-      <div className="flex justify-between items-center mb-6">
+      {/* ==========================
+          Header
+      ========================== */}
+      <div className="flex justify-between items-center mb-8">
 
         <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
+          <h1 className="text-3xl font-bold flex items-center gap-2">
             <VideoCameraOutlined className="text-[#fb991d]" />
-            Live Meetings
+            Live Classes
           </h1>
 
-          <p className="text-gray-500 text-sm">
-            Manage all live classroom meetings.
+          <p className="text-gray-500 mt-1">
+            Schedule and manage Zoom live classes.
           </p>
         </div>
 
         <Button
           type="primary"
+          size="large"
+          className="bg-[#fb991d] border-none"
           onClick={() => setIsCreateModalOpen(true)}
-          className="bg-[#fb991d]"
         >
-          + Create Meeting
+          + Schedule Live Class
         </Button>
 
       </div>
+
+      {/* ==========================
+          Live Class Cards
+      ========================== */}
 
       <Spin spinning={loading}>
 
         {meetings.length === 0 ? (
 
-          <Empty description="No Meetings Found" />
+          <Empty description="No Live Classes Found" />
 
         ) : (
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
 
             {meetings.map((meeting) => (
-
               <MeetingCard
                 key={meeting._id}
                 meeting={meeting}
                 onRefresh={fetchMeetings}
               />
-
             ))}
 
           </div>
@@ -84,6 +92,10 @@ const fetchMeetings = async () => {
         )}
 
       </Spin>
+
+      {/* ==========================
+          Create Live Class Modal
+      ========================== */}
 
       <CreateMeetingModal
         open={isCreateModalOpen}

@@ -19,8 +19,16 @@ const createMeetingSchema = Joi.object({
     "string.max": "Teacher name cannot exceed 50 characters.",
     "any.required": "Teacher name is required.",
   }),
-  scheduledAt: Joi.date().required(),
-  
+
+  zoomMeetingLink: Joi.string().uri().required().messages({
+    "string.empty": "Zoom Meeting Link is required.",
+    "string.uri": "Please enter a valid Zoom Meeting Link.",
+    "any.required": "Zoom Meeting Link is required.",
+  }),
+
+  scheduledAt: Joi.date().required().messages({
+    "any.required": "Scheduled date & time is required.",
+  }),
 });
 
 module.exports = {
