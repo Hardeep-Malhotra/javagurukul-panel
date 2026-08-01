@@ -2,12 +2,23 @@ const mongoose = require("mongoose");
 
 const meetingSchema = new mongoose.Schema(
   {
-    // Unique Meeting Code
+    // Unique Meeting Code (Made optional or generated)
     meetingCode: {
       type: String,
+      trim: true,
+    },
+
+    // Zoom Meeting ID
+    zoomMeetingId: {
+      type: String,
       required: true,
-      unique: true,
-      index: true,
+      trim: true,
+    },
+
+    // Zoom Passcode
+    zoomPasscode: {
+      type: String,
+      required: true,
       trim: true,
     },
 
@@ -92,7 +103,7 @@ const meetingSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  },
+  }
 );
 
 module.exports = mongoose.model("Meeting", meetingSchema);
