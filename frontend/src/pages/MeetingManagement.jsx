@@ -10,6 +10,7 @@ const MeetingManagement = () => {
   const [meetings, setMeetings] = useState([]);
   const [loading, setLoading] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [editingMeeting, setEditingMeeting] = useState(null); // 👈 Edit state added
 
   // ==========================
   // Fetch Live Classes
@@ -35,14 +36,28 @@ const MeetingManagement = () => {
     fetchMeetings();
   }, []);
 
+  // ==========================
+  // Handle Edit Click
+  // ==========================
+  const handleEditMeeting = (meeting) => {
+    setEditingMeeting(meeting);
+    setIsCreateModalOpen(true);
+  };
+
+  // ==========================
+  // Handle Modal Close
+  // ==========================
+  const handleCloseModal = () => {
+    setIsCreateModalOpen(false);
+    setEditingMeeting(null);
+  };
+
   return (
     <div className="p-5">
-
       {/* ==========================
           Header
       ========================== */}
       <div className="flex justify-between items-center mb-8">
-
         <div>
           <h1 className="text-3xl font-bold flex items-center gap-2">
             <VideoCameraOutlined className="text-[#fb991d]" />
@@ -58,11 +73,13 @@ const MeetingManagement = () => {
           type="primary"
           size="large"
           className="bg-[#fb991d] border-none"
-          onClick={() => setIsCreateModalOpen(true)}
+          onClick={() => {
+            setEditingMeeting(null);
+            setIsCreateModalOpen(true);
+          }}
         >
           + Schedule Live Class
         </Button>
-
       </div>
 
       {/* ==========================
@@ -70,39 +87,32 @@ const MeetingManagement = () => {
       ========================== */}
 
       <Spin spinning={loading}>
-
         {meetings.length === 0 ? (
-
           <Empty description="No Live Classes Found" />
-
         ) : (
-
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-
             {meetings.map((meeting) => (
               <MeetingCard
                 key={meeting._id}
                 meeting={meeting}
                 onRefresh={fetchMeetings}
+                onEdit={handleEditMeeting} // 👈 Pass handler here
               />
             ))}
-
           </div>
-
         )}
-
       </Spin>
 
       {/* ==========================
-          Create Live Class Modal
+          Create / Edit Live Class Modal
       ========================== */}
 
       <CreateMeetingModal
         open={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
+        onClose={handleCloseModal}
         onRefresh={fetchMeetings}
+        editingMeeting={editingMeeting} // 👈 Pass selected meeting for editing
       />
-
     </div>
   );
 };

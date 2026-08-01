@@ -27,16 +27,16 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@rolldown/wasm-binding": "^0.0.5",
-<<<<<<< HEAD
+
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.3",
-=======
+
     "@tailwindcss/vite": "^4.3.3",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.4",
->>>>>>> 6b750f6246f4dd448790cdaa1e850e2513126e16
+
     "autoprefixer": "^10.5.0",
     "eslint": "^10.3.0",
     "eslint-plugin-react-hooks": "^7.1.1",

@@ -46,6 +46,35 @@ export const getMeetingByIdAPI = async (meetingId) => {
 };
 
 // ==========================================
+// Update Live Class
+// ==========================================
+export const updateMeetingAPI = async (meetingId, meetingData) => {
+  const response = await axios.put(
+    `${API_URL}/${meetingId}`,
+    meetingData,
+    {
+      withCredentials: true,
+    }
+  );
+
+  return response.data;
+};
+
+// ==========================================
+// Delete Live Class
+// ==========================================
+export const deleteMeetingAPI = async (meetingId) => {
+  const response = await axios.delete(
+    `${API_URL}/${meetingId}`,
+    {
+      withCredentials: true,
+    }
+  );
+
+  return response.data;
+};
+
+// ==========================================
 // End Live Class
 // ==========================================
 export const endMeetingAPI = async (meetingId) => {

@@ -12,10 +12,13 @@ import {
 import dayjs from "dayjs";
 import Cookies from "js-cookie";
 
-import { createMeetingAPI } from "../../services/meetingService";
+import {
+  createMeetingAPI,
+  updateMeetingAPI,
+} from "../../services/meetingService";
 import { fetchAllBatchesAPI } from "../../services/studentService";
 
-const CreateMeetingModal = ({ open, onClose, onRefresh }) => {
+const CreateMeetingModal = ({ open, onClose, onRefresh, editingMeeting }) => {
   const [form] = Form.useForm();
 
   const [loading, setLoading] = useState(false);
@@ -24,7 +27,6 @@ const CreateMeetingModal = ({ open, onClose, onRefresh }) => {
   // ==========================
   // Logged In Admin
   // ==========================
-
   const savedUser = Cookies.get("adminUser");
 
   const userData = savedUser
@@ -36,7 +38,6 @@ const CreateMeetingModal = ({ open, onClose, onRefresh }) => {
   // ==========================
   // Load Batches
   // ==========================
-
   const loadBatches = async () => {
     try {
       const response = await fetchAllBatchesAPI();
@@ -54,16 +55,30 @@ const CreateMeetingModal = ({ open, onClose, onRefresh }) => {
     if (open) {
       loadBatches();
 
-      form.setFieldsValue({
-        teacherName: userData.name,
-      });
+      if (editingMeeting) {
+        // Edit Mode: Populate values
+        form.setFieldsValue({
+          title: editingMeeting.title,
+          batch: editingMeeting.batch,
+          teacherName: editingMeeting.teacherName,
+          zoomMeetingLink: editingMeeting.zoomMeetingLink,
+          zoomMeetingId: editingMeeting.zoomMeetingId,
+          zoomPasscode: editingMeeting.zoomPasscode,
+          scheduledAt: dayjs(editingMeeting.scheduledAt),
+        });
+      } else {
+        // Create Mode: Reset form & auto-set teacher
+        form.resetFields();
+        form.setFieldsValue({
+          teacherName: userData.name,
+        });
+      }
     }
-  }, [open]);
+  }, [open, editingMeeting]);
 
   // ==========================
   // Auto Fill Title
   // ==========================
-
   const handleBatchChange = (batchName) => {
     const currentTitle = form.getFieldValue("title");
 
@@ -75,9 +90,8 @@ const CreateMeetingModal = ({ open, onClose, onRefresh }) => {
   };
 
   // ==========================
-  // Submit
+  // Submit (Create or Update)
   // ==========================
-
   const handleSubmit = async (values) => {
     try {
       setLoading(true);
@@ -87,13 +101,24 @@ const CreateMeetingModal = ({ open, onClose, onRefresh }) => {
         scheduledAt: values.scheduledAt.toISOString(),
       };
 
-      const response = await createMeetingAPI(payload);
+      console.log("Submitting Payload:", payload);
+
+      let response;
+
+      if (editingMeeting) {
+        response = await updateMeetingAPI(editingMeeting._id, payload);
+      } else {
+        response = await createMeetingAPI(payload);
+      }
 
       if (response.success) {
-        message.success("Live Class Scheduled Successfully.");
+        message.success(
+          editingMeeting
+            ? "Live Class Updated Successfully."
+            : "Live Class Scheduled Successfully."
+        );
 
         form.resetFields();
-
         onClose();
 
         if (onRefresh) {
@@ -101,11 +126,12 @@ const CreateMeetingModal = ({ open, onClose, onRefresh }) => {
         }
       }
     } catch (error) {
-      console.error(error);
+      console.error("Backend Error Details:", error.response?.data);
 
       message.error(
         error.response?.data?.message ||
-          "Failed to schedule live class."
+          error.response?.data?.error ||
+          "Failed to save live class."
       );
     } finally {
       setLoading(false);
@@ -114,23 +140,18 @@ const CreateMeetingModal = ({ open, onClose, onRefresh }) => {
 
   return (
     <Modal
-      title="Schedule Live Class"
+      title={editingMeeting ? "Edit Live Class" : "Schedule Live Class"}
       open={open}
       footer={null}
       centered
-      destroyOnClose
+      destroyOnHidden
       onCancel={() => {
         form.resetFields();
         onClose();
       }}
     >
-      <Form
-        form={form}
-        layout="vertical"
-        onFinish={handleSubmit}
-      >
+      <Form form={form} layout="vertical" onFinish={handleSubmit}>
         {/* Live Class Title */}
-
         <Form.Item
           label="Live Class Title"
           name="title"
@@ -145,7 +166,6 @@ const CreateMeetingModal = ({ open, onClose, onRefresh }) => {
         </Form.Item>
 
         {/* Batch */}
-
         <Form.Item
           label="Batch"
           name="batch"
@@ -163,10 +183,7 @@ const CreateMeetingModal = ({ open, onClose, onRefresh }) => {
             onChange={handleBatchChange}
           >
             {batches.map((batch) => (
-              <Select.Option
-                key={batch._id}
-                value={batch.batchName}
-              >
+              <Select.Option key={batch._id} value={batch.batchName}>
                 {batch.batchName}
               </Select.Option>
             ))}
@@ -174,7 +191,6 @@ const CreateMeetingModal = ({ open, onClose, onRefresh }) => {
         </Form.Item>
 
         {/* Teacher */}
-
         <Form.Item
           label="Teacher Name"
           name="teacherName"
@@ -189,7 +205,6 @@ const CreateMeetingModal = ({ open, onClose, onRefresh }) => {
         </Form.Item>
 
         {/* Zoom Meeting Link */}
-
         <Form.Item
           label="Zoom Meeting Link"
           name="zoomMeetingLink"
@@ -200,15 +215,42 @@ const CreateMeetingModal = ({ open, onClose, onRefresh }) => {
             },
             {
               type: "url",
-              message: "Please enter a valid Zoom Meeting Link.",
+              message: "Please enter a valid Zoom Meeting Link (must start with https://).",
             },
           ]}
         >
           <Input placeholder="https://zoom.us/j/1234567890" />
         </Form.Item>
 
-        {/* Schedule */}
+        {/* Zoom Meeting ID */}
+        <Form.Item
+          label="Zoom Meeting ID"
+          name="zoomMeetingId"
+          rules={[
+            {
+              required: true,
+              message: "Please enter Zoom Meeting ID.",
+            },
+          ]}
+        >
+          <Input placeholder="123 456 7890" />
+        </Form.Item>
 
+        {/* Zoom Passcode */}
+        <Form.Item
+          label="Zoom Passcode"
+          name="zoomPasscode"
+          rules={[
+            {
+              required: true,
+              message: "Please enter Zoom Passcode.",
+            },
+          ]}
+        >
+          <Input.Password placeholder="Enter Zoom Passcode" />
+        </Form.Item>
+
+        {/* Schedule */}
         <Form.Item
           label="Class Date & Time"
           name="scheduledAt"
@@ -235,9 +277,9 @@ const CreateMeetingModal = ({ open, onClose, onRefresh }) => {
           htmlType="submit"
           loading={loading}
           block
-          className="bg-[#fb991d] border-none"
+          className="bg-[#fb991d] border-none font-medium"
         >
-          Schedule Live Class
+          {editingMeeting ? "Update Live Class" : "Schedule Live Class"}
         </Button>
       </Form>
     </Modal>
