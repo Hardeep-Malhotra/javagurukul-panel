@@ -1,50 +1,61 @@
 const Meeting = require("../../models/Meeting");
+const Student = require("../../models/Student");
+const sendEmail = require("../../utils/sendEmail");
+const meetingScheduleTemplate = require("../../utils/emailTemplates/meetingScheduleTemplate");
 
-const updateMeeting = async (req, res) => {
+const updateMeeting = async (req, res, next) => {
   try {
     const { meetingId } = req.params;
 
-    const {
-      title,
-      batch,
-      teacherName,
-      scheduledAt,
-      zoomMeetingLink,
-      zoomMeetingId,
-      zoomPasscode,
-    } = req.body;
+    const updatedMeeting = await Meeting.findByIdAndUpdate(
+      meetingId,
+      req.body,
+      { new: true }
+    );
 
-    const meeting = await Meeting.findById(meetingId);
+    if (!updatedMeeting) {
+      return res.status(404).json({ success: false, message: "Meeting not found" });
+    }
 
-    if (!meeting) {
-      return res.status(404).json({
-        success: false,
-        message: "Meeting not found.",
+    // 📩 Send Email to new batch students on Update/Edit
+    const students = await Student.find({
+      batch: { $regex: new RegExp(`^${updatedMeeting.batch.trim()}$`, "i") },
+      status: "Active",
+    });
+
+    if (students.length > 0) {
+      const emailPromises = students.map((student) => {
+        const html = meetingScheduleTemplate({
+          studentName: student.name,
+          title: updatedMeeting.title,
+          teacherName: updatedMeeting.teacherName,
+          batch: updatedMeeting.batch,
+          meetingCode: updatedMeeting.meetingCode,
+          zoomMeetingId: updatedMeeting.zoomMeetingId,
+          zoomPasscode: updatedMeeting.zoomPasscode,
+          scheduledAt: updatedMeeting.scheduledAt,
+          meetingLink: updatedMeeting.zoomMeetingLink,
+        });
+
+        return sendEmail({
+          to: student.email,
+          subject: `📢 Live Class Updated/Scheduled - ${updatedMeeting.title}`,
+          html,
+        });
+      });
+
+      Promise.allSettled(emailPromises).then((results) => {
+        console.log(`✉️ Emails sent to updated batch: ${students.length}`);
       });
     }
 
-    meeting.title = title;
-    meeting.batch = batch;
-    meeting.teacherName = teacherName;
-    meeting.scheduledAt = scheduledAt;
-    meeting.zoomMeetingLink = zoomMeetingLink;
-    meeting.zoomMeetingId = zoomMeetingId;
-    meeting.zoomPasscode = zoomPasscode;
-
-    await meeting.save();
-
     return res.status(200).json({
       success: true,
-      message: "Meeting updated successfully.",
-      data: meeting,
+      message: "Live Class Updated Successfully & Email Sent.",
+      data: updatedMeeting,
     });
-  } catch (error) {
-    console.error(error);
-
-    return res.status(500).json({
-      success: false,
-      message: "Failed to update meeting.",
-    });
+  } catch (err) {
+    next(err);
   }
 };
 
