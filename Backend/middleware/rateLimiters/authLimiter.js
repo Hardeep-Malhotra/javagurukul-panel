@@ -1,7 +1,7 @@
 const rateLimit = require("express-rate-limit");
 
 const authLimiter = rateLimit({
-  windowMs: 10 * 1000, // 10 seconds
+  windowMs: 10 * 1000,
   max: 5,
 
   message: {
@@ -11,11 +11,6 @@ const authLimiter = rateLimit({
 
   standardHeaders: true,
   legacyHeaders: false,
-
-  // Trust proxy friendly key generator
-  keyGenerator: (req) => {
-    return req.ip;
-  },
 });
 
 module.exports = authLimiter;
