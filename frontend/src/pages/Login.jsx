@@ -1,10 +1,8 @@
-
-
-
 import { useState } from "react";
 import { Form, Button, message, Spin, Alert } from "antd";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { API_BASE_URL } from "../config/api";
 import { useOtpTimer } from "../components/Login/useOtpTimer";
 import { useLockTimer } from "../components/Login/useLockTimer";
 import EmailPasswordForm from "../components/Login/EmailPasswordForm";
@@ -26,7 +24,8 @@ const Login = () => {
   const [userEmail, setUserEmail] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const { timeLeft, setIsTimerActive, formatTime, resetTimer } = useOtpTimer(300);
+  const { timeLeft, setIsTimerActive, formatTime, resetTimer } =
+    useOtpTimer(300);
   const { lockTimeLeft, isLocked, formatLockTime, startLock } = useLockTimer();
 
   const navigate = useNavigate();
@@ -45,22 +44,22 @@ const Login = () => {
 
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/auth/admin-login",
-        DEMO_CREDENTIALS
+        `${API_BASE_URL}/api/auth/admin-login`,
+        DEMO_CREDENTIALS,
       );
 
       if (response.data.success) {
         // Save user session
         localStorage.setItem("adminUser", JSON.stringify(response.data.user));
-        
+
         message.success("Demo Login Successful! Redirecting...");
-        
+
         // DIRECT REDIRECT TO DASHBOARD (No OTP State set)
         navigate("/admin/dashboard");
       }
     } catch (error) {
       message.error(
-        error.response?.data?.message || "Failed to login with Demo Account."
+        error.response?.data?.message || "Failed to login with Demo Account.",
       );
     } finally {
       setLoading(false);
@@ -73,11 +72,11 @@ const Login = () => {
     try {
       const currentValues = form.getFieldsValue();
       const response = await axios.post(
-        "http://localhost:5000/api/auth/admin-login",
+        `${API_BASE_URL}/api/auth/admin-login`,
         {
           email: userEmail,
           password: currentValues.password,
-        }
+        },
       );
       if (response.data.success) {
         message.success("A fresh security OTP has been sent to your email!");
@@ -89,7 +88,7 @@ const Login = () => {
         startLock(3600);
       } else {
         message.error(
-          error.response?.data?.message || "Failed to resend OTP. Try again!"
+          error.response?.data?.message || "Failed to resend OTP. Try again!",
         );
       }
     } finally {
@@ -102,17 +101,20 @@ const Login = () => {
     try {
       if (!isOtpSent) {
         const response = await axios.post(
-          "http://localhost:5000/api/auth/admin-login",
+          `${API_BASE_URL}/api/auth/admin-login`,
           {
             email: values.email,
             password: values.password,
-          }
+          },
         );
 
         if (response.data.success) {
           // Check if Backend bypassed OTP for Demo user
           if (response.data.demo || values.email === DEMO_CREDENTIALS.email) {
-            localStorage.setItem("adminUser", JSON.stringify(response.data.user));
+            localStorage.setItem(
+              "adminUser",
+              JSON.stringify(response.data.user),
+            );
             message.success("Demo Login Successful!");
             navigate("/admin/dashboard");
             return;
@@ -132,13 +134,12 @@ const Login = () => {
         }
 
         const response = await axios.post(
-          "http://localhost:5000/api/auth/verify-otp",
+          `${API_BASE_URL}/api/auth/verify-otp`,
           {
             email: userEmail,
             otp: values.otp,
-          }
+          },
         );
-
         if (response.data.success) {
           message.success(response.data.message);
           localStorage.setItem("adminUser", JSON.stringify(response.data.user));
@@ -244,7 +245,8 @@ const Login = () => {
                 🚀 Demo Account
               </h3>
               <p className="text-xs text-gray-600 mb-3">
-                Click below to explore JavaGuruKul instantly without OTP verification.
+                Click below to explore JavaGuruKul instantly without OTP
+                verification.
               </p>
               <Button
                 block
@@ -261,7 +263,7 @@ const Login = () => {
               <Alert
                 message="Access Temporarily Locked"
                 description={`Due to security reasons, this panel is frozen. Please try again after: ${formatLockTime(
-                  lockTimeLeft
+                  lockTimeLeft,
                 )}`}
                 type="error"
                 showIcon
@@ -320,8 +322,8 @@ const Login = () => {
                   {isLocked
                     ? "System Locked"
                     : isOtpSent
-                    ? "Verify OTP & Login"
-                    : "Sign In to Panel"}
+                      ? "Verify OTP & Login"
+                      : "Sign In to Panel"}
                 </Button>
               </Form.Item>
             </Form>
