@@ -6,37 +6,27 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "lint": "eslint ."
   },
   "dependencies": {
     "@ant-design/icons": "^6.2.5",
-    "@rolldown/binding-win32-x64-msvc": "^1.2.0",
     "antd": "^6.4.4",
     "axios": "^1.18.0",
-    "install": "^0.13.0",
     "js-cookie": "^3.0.8",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
     "react-router-dom": "^7.18.0",
     "react-youtube": "^10.1.0",
     "recharts": "^3.8.1",
-    "socket.io-client": "^4.8.3",
-    "vite": "^8.1.5"
+    "socket.io-client": "^4.8.3"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@rolldown/wasm-binding": "^0.0.5",
-
-    "@types/react": "^19.2.14",
-    "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react": "^6.0.3",
-
     "@tailwindcss/vite": "^4.3.3",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.4",
-
     "autoprefixer": "^10.5.0",
     "eslint": "^10.3.0",
     "eslint-plugin-react-hooks": "^7.1.1",
