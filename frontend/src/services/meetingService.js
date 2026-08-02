@@ -1,6 +1,6 @@
 import axios from "axios";
-
-const API_URL = "http://localhost:5000/api/meeting";
+import { API_BASE_URL } from "../config/api";
+const API_URL = `${API_BASE_URL}/api/meeting`;
 
 // ==========================================
 // Create Live Class

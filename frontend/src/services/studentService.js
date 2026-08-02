@@ -1,8 +1,8 @@
 // 📄 frontend/src/services/studentService.js
 import axios from "axios";
-
+import { API_BASE_URL } from "../config/api";
 // Backend base URL (Ensure this matches your server port entry precisely)
-const API_URL = "http://localhost:5000/api/students";
+const API_URL = `${API_BASE_URL}/api/students`;
 
 // ==========================================
 // 🛡️ ADMIN PANEL OPERATION METHODS

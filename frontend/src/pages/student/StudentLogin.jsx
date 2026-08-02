@@ -1,8 +1,15 @@
 // 📄 frontend/src/pages/student/StudentLogin.jsx
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Button } from "antd";
 import { loginStudent } from "../../services/studentService";
 import { useStudentAuth } from "../../context/StudentAuthContext";
+
+// Pre-configured Demo Credentials
+const DEMO_STUDENT = {
+  email: import.meta.env.VITE_DEMO_STUDENT_EMAIL ,
+  password: import.meta.env.VITE_DEMO_STUDENT_PASSWORD,
+};
 
 const StudentLogin = () => {
   const [email, setEmail] = useState("");
@@ -13,6 +20,36 @@ const StudentLogin = () => {
   const { login } = useStudentAuth();
   const navigate = useNavigate();
 
+  // 🚀 Direct Demo Login Flow
+  const handleDemoLogin = async () => {
+    setLoading(true);
+    setError("");
+
+    // Visual feedback on inputs
+    setEmail(DEMO_STUDENT.email);
+    setPassword(DEMO_STUDENT.password);
+
+    try {
+      const data = await loginStudent(
+        DEMO_STUDENT.email,
+        DEMO_STUDENT.password
+      );
+
+      if (data.success) {
+        login(data.student);
+        localStorage.setItem("studentData", JSON.stringify(data.student));
+        navigate("/student/portal");
+      }
+    } catch (err) {
+      setError(
+        err.response?.data?.message || "Demo Login Failed. Make sure Demo Student exists in DB."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Normal Form Submission
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -21,18 +58,14 @@ const StudentLogin = () => {
     try {
       const data = await loginStudent(email, password);
       if (data.success) {
-        // Auth Context ke login method ko trigger karo data global store karne ke liye
-
-        console.log("API Response =", data);
         login(data.student);
-
-console.log("Student Saved =", data.student);
+        localStorage.setItem("studentData", JSON.stringify(data.student));
         navigate("/student/portal");
       }
     } catch (err) {
       setError(
         err.response?.data?.message ||
-          "Authentication failed. Server unreachable.",
+          "Authentication failed. Server unreachable."
       );
     } finally {
       setLoading(false);
@@ -57,6 +90,25 @@ console.log("Student Saved =", data.student);
           <h3 className="text-xl font-extrabold text-[#14212a] text-center mb-6">
             Welcome Back, Learner! 🎉
           </h3>
+
+          {/* 🚀 DEMO STUDENT LOGIN CARD */}
+          <div className="mb-6 rounded-xl border border-orange-200 bg-orange-50/80 p-4 shadow-sm">
+            <h3 className="font-bold text-orange-800 text-sm flex items-center gap-1.5 mb-1">
+              🚀 Quick Demo Account
+            </h3>
+            <p className="text-xs text-gray-600 mb-3">
+              Explore the Student Portal features instantly without manual login.
+            </p>
+            <Button
+              type="primary"
+              block
+              onClick={handleDemoLogin}
+              loading={loading}
+              className="bg-[#fb991d] hover:!bg-[#e08512] font-bold text-white border-none h-10 shadow-sm"
+            >
+              Login as Demo Student
+            </Button>
+          </div>
 
           {error && (
             <div className="mb-4 p-3 bg-red-50 text-red-600 text-sm font-semibold rounded-lg border border-red-100">

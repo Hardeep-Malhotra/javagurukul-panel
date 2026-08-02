@@ -1,9 +1,8 @@
 // 📄 frontend/src/services/videoService.js
 import axios from "axios";
-
+import { API_BASE_URL } from "../config/api";
 // Base URL tumhari backend port ke hisab se
-const API_URL = "http://localhost:5000/api/video-access";
-
+const API_URL = `${API_BASE_URL}/api/video-access`;
 // 1. Video Library me fresh video add karne ke liye
 export const addVideoToLibrary = async (videoData) => {
   try {

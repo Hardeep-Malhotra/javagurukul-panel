@@ -1,3 +1,6 @@
+
+
+
 import { useState } from "react";
 import { Form, Button, message, Spin, Alert } from "antd";
 import axios from "axios";
@@ -11,18 +14,58 @@ import Logo from "../assets/java-gurukul-logo.png";
 
 axios.defaults.withCredentials = true;
 
+// Pre-configured Demo Credentials from .env
+const DEMO_CREDENTIALS = {
+  email: import.meta.env.VITE_DEMO_ADMIN_EMAIL || "demo.admin@javagurukul.com",
+  password: import.meta.env.VITE_DEMO_ADMIN_PASSWORD || "12345678",
+};
+
 const Login = () => {
   const [loading, setLoading] = useState(false);
   const [isOtpSent, setIsOtpSent] = useState(false);
   const [userEmail, setUserEmail] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const { timeLeft, setIsTimerActive, formatTime, resetTimer } =
-    useOtpTimer(300);
 
+  const { timeLeft, setIsTimerActive, formatTime, resetTimer } = useOtpTimer(300);
   const { lockTimeLeft, isLocked, formatLockTime, startLock } = useLockTimer();
 
   const navigate = useNavigate();
   const [form] = Form.useForm();
+
+  // ⚡ DIRECT DEMO LOGIN (Zero OTP / Direct Dashboard)
+  const handleQuickDemoLogin = async () => {
+    if (isLocked) return;
+    setLoading(true);
+
+    // Form fields autofill for visual UX
+    form.setFieldsValue({
+      email: DEMO_CREDENTIALS.email,
+      password: DEMO_CREDENTIALS.password,
+    });
+
+    try {
+      const response = await axios.post(
+        "http://localhost:5000/api/auth/admin-login",
+        DEMO_CREDENTIALS
+      );
+
+      if (response.data.success) {
+        // Save user session
+        localStorage.setItem("adminUser", JSON.stringify(response.data.user));
+        
+        message.success("Demo Login Successful! Redirecting...");
+        
+        // DIRECT REDIRECT TO DASHBOARD (No OTP State set)
+        navigate("/admin/dashboard");
+      }
+    } catch (error) {
+      message.error(
+        error.response?.data?.message || "Failed to login with Demo Account."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleResendOtp = async () => {
     if (isLocked) return;
@@ -34,11 +77,9 @@ const Login = () => {
         {
           email: userEmail,
           password: currentValues.password,
-        },
+        }
       );
-
       if (response.data.success) {
-         console.log(response.data.user);
         message.success("A fresh security OTP has been sent to your email!");
         resetTimer();
       }
@@ -48,7 +89,7 @@ const Login = () => {
         startLock(3600);
       } else {
         message.error(
-          error.response?.data?.message || "Failed to resend OTP. Try again!",
+          error.response?.data?.message || "Failed to resend OTP. Try again!"
         );
       }
     } finally {
@@ -65,10 +106,19 @@ const Login = () => {
           {
             email: values.email,
             password: values.password,
-          },
+          }
         );
 
         if (response.data.success) {
+          // Check if Backend bypassed OTP for Demo user
+          if (response.data.demo || values.email === DEMO_CREDENTIALS.email) {
+            localStorage.setItem("adminUser", JSON.stringify(response.data.user));
+            message.success("Demo Login Successful!");
+            navigate("/admin/dashboard");
+            return;
+          }
+
+          // Normal User OTP Flow
           message.success(response.data.message);
           setUserEmail(values.email);
           setIsOtpSent(true);
@@ -86,7 +136,7 @@ const Login = () => {
           {
             email: userEmail,
             otp: values.otp,
-          },
+          }
         );
 
         if (response.data.success) {
@@ -117,12 +167,10 @@ const Login = () => {
             "linear-gradient(160deg, #14212a 0%, #14212a 55%, #17647e 100%)",
         }}
       >
-        {/* Subtle decorative glow circles */}
         <div className="absolute -top-24 -left-24 w-80 h-80 bg-brand-orange/10 rounded-full blur-3xl" />
         <div className="absolute bottom-0 -right-10 w-96 h-96 bg-brand-blue/15 rounded-full blur-3xl" />
 
         <div className="relative z-10 flex flex-col items-center text-center max-w-sm">
-          {/* Logo card - solid white for max contrast/visibility */}
           <div className="bg-white rounded-2xl px-6 py-5 shadow-2xl mb-8">
             <img
               src={Logo}
@@ -136,16 +184,14 @@ const Login = () => {
           </span>
 
           <h1 className="text-3xl font-black text-white mb-3 leading-tight">
-            Manage Courses,
-            <br />
-            Onboard Students
+            Manage Courses, <br /> Onboard Students
           </h1>
+
           <p className="text-gray-300 text-sm mb-10 leading-relaxed">
             A dedicated workspace for JavaGurukul instructors to onboard
             students, manage courses, and run live classes — all in one place.
           </p>
 
-          {/* Stats row */}
           <div className="grid grid-cols-3 gap-6 w-full border-t border-white/10 pt-8">
             <div>
               <p className="text-2xl font-black text-brand-orange">500+</p>
@@ -180,7 +226,7 @@ const Login = () => {
             <img
               src={Logo}
               alt="JavaGurukul Logo"
-              className="h-30 w-auto object-contain"
+              className="h-20 w-auto object-contain"
             />
           </div>
 
@@ -191,11 +237,32 @@ const Login = () => {
             Sign in to access the admin panel
           </p>
 
+          {/* DEMO CARD SECTION */}
+          {!isOtpSent && !isLocked && (
+            <div className="mb-6 rounded-xl border border-orange-200 bg-orange-50 p-4">
+              <h3 className="font-bold text-orange-700 mb-1 flex items-center gap-1">
+                🚀 Demo Account
+              </h3>
+              <p className="text-xs text-gray-600 mb-3">
+                Click below to explore JavaGuruKul instantly without OTP verification.
+              </p>
+              <Button
+                block
+                className="font-bold border-orange-400 text-orange-700 hover:text-orange-800 hover:border-orange-500 bg-white shadow-sm h-10"
+                onClick={handleQuickDemoLogin}
+              >
+                Login as Demo
+              </Button>
+            </div>
+          )}
+
           {isLocked && (
             <div className="mb-4">
               <Alert
                 message="Access Temporarily Locked"
-                description={`Due to security reasons, this panel is frozen. Please try again after: ${formatLockTime(lockTimeLeft)}`}
+                description={`Due to security reasons, this panel is frozen. Please try again after: ${formatLockTime(
+                  lockTimeLeft
+                )}`}
                 type="error"
                 showIcon
                 closable={false}
@@ -205,7 +272,7 @@ const Login = () => {
 
           <Spin
             spinning={loading}
-            tip={isOtpSent ? "Verifying OTP secure..." : "Sending OTP..."}
+            tip={isOtpSent ? "Verifying OTP secure..." : "Authenticating..."}
           >
             <Form
               form={form}
@@ -253,8 +320,8 @@ const Login = () => {
                   {isLocked
                     ? "System Locked"
                     : isOtpSent
-                      ? "Verify OTP & Login"
-                      : "Sign In to Panel"}
+                    ? "Verify OTP & Login"
+                    : "Sign In to Panel"}
                 </Button>
               </Form.Item>
             </Form>
