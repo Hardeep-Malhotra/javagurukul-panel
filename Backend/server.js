@@ -15,6 +15,11 @@ connectDB();
 
 const app = express();
 
+// ======================================
+// Render / Reverse Proxy Support
+// ======================================
+app.set("trust proxy", 1);
+
 // ==============================
 // Middlewares
 // ==============================
@@ -25,14 +30,14 @@ app.use(cookieParser());
 // CORS Configuration
 // ==============================
 const allowedOrigins = [
-  "http://localhost:5173", // Local Development
-  "https://javagurukul-panel-sigma.vercel.app", // Production Frontend
+  "http://localhost:5173",
+  "https://javagurukul-panel-sigma.vercel.app",
 ];
 
 app.use(
   cors({
     origin(origin, callback) {
-      // Postman ya server-to-server request
+      // Allow Postman, server-to-server requests
       if (!origin) return callback(null, true);
 
       if (allowedOrigins.includes(origin)) {
@@ -42,7 +47,7 @@ app.use(
       return callback(new Error("Not allowed by CORS"));
     },
     credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE"],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
