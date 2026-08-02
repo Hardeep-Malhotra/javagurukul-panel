@@ -8,11 +8,16 @@ const aiService = require("../../services/aiService");
  * Background AI Notes Generator
  * Admin response ko block nahi karega.
  */
+
 const generateAiNotesBackground = async (
   youtubeVideoId,
   videoTitle,
   youtubeUrl,
 ) => {
+    if (process.env.AI_ENABLED !== "true") {
+    console.log("🚫 AI Generation Disabled");
+    return;
+  }
   let notesDocument;
 
   try {

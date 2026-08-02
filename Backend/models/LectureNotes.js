@@ -57,7 +57,7 @@ const LectureNotesSchema = new mongoose.Schema(
     // AI Information
     aiModel: {
       type: String,
-      default: "gemma3:4b",
+      default: "gemma3:4b", 
     },
 
     promptVersion: {

@@ -34,6 +34,48 @@ const studentLogin = async (req, res) => {
         message: "Your account is inactive. Please contact the administrator.",
       });
     }
+    // ==========================================
+// Demo Student Login
+// ==========================================
+if (
+  process.env.DEMO_MODE === "true" &&
+  email.trim().toLowerCase() ===
+    process.env.DEMO_STUDENT_EMAIL.toLowerCase()
+) {
+  const token = jwt.sign(
+    {
+      id: student._id,
+      email: student.email,
+      batch: student.batch,
+    },
+    process.env.JWT_SECRET,
+    {
+      expiresIn: "7d",
+    }
+  );
+
+  res.cookie("studentToken", token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  });
+
+  return res.status(200).json({
+    success: true,
+    demo: true,
+    message: "Demo Student Login Successful",
+    student: {
+      id: student._id,
+      name: student.name,
+      email: student.email,
+      phone: student.phone,
+      batch: student.batch,
+      category: student.category,
+      status: student.status,
+    },
+  });
+}
 
     // 4️⃣ Password = Registered Phone Number
     if (student.phone.trim() !== password.trim()) {

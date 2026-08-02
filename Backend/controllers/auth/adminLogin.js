@@ -3,6 +3,7 @@ const User = require("../../models/User");
 const bcrypt = require("bcryptjs");
 const loginSchema = require("../../validators/loginValidator");
 const sendOTPService = require("../../utils/otpService");
+const jwt = require("jsonwebtoken");
 
 /**
  * Stage 1: Validate credentials and prepare user session context
@@ -29,6 +30,41 @@ const adminLogin = async (req, res, next) => {
         .json({ success: false, message: "Invalid Email or Password" });
     }
 
+    // ==========================================
+    // Demo Login
+    // ==========================================
+    if (
+      process.env.DEMO_MODE === "true" &&
+      email === process.env.DEMO_ADMIN_EMAIL
+    ) {
+      const token = jwt.sign(
+        {
+          id: user._id,
+          role: user.role,
+        },
+        process.env.JWT_SECRET,
+        {
+          expiresIn: "1d",
+        },
+      );
+
+      res.cookie("adminToken", token, {
+        httpOnly: true,
+        secure: false,
+        sameSite: "lax",
+      });
+
+      return res.status(200).json({
+        success: true,
+        message: "Demo Login Successful",
+        demo: true,
+        user: {
+          id: user._id,
+          email: user.email,
+          role: user.role,
+        },
+      });
+    }
     // 🔗 Attach authenticated user to request pipeline for authorization guard
     req.user = user;
 
@@ -39,31 +75,6 @@ const adminLogin = async (req, res, next) => {
   }
 };
 
-/**
- * Stage 2: Triggered only after authorizeRoles middleware grants access
- */
-const sendAdminOTP = async (req, res, next) => {
-  try {
-    const user = req.user; // Retrieved safely from request context
-
-    // Trigger HTML OTP service
-    await sendOTPService(
-      user.email,
-      { userId: user._id, role: user.role, purpose: "ADMIN_LOGIN" },
-      "JavaGurukul Security System - Login OTP Verification",
-      "Admin Panel Authentication",
-      "You are attempting to log into the JavaGurukul Admin Dashboard. Use the secure 6-digit verification code below to authorize this login session.",
-    );
-
-    return res.status(200).json({
-      success: true,
-      message: "Security OTP successfully sent to your registered email!",
-      showOTPField: true,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
 
 // Exporting both as a named block
-module.exports = adminLogin;
+module.exports =  adminLogin; 
