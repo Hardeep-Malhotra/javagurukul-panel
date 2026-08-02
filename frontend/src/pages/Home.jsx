@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button, message } from "antd";
 import axios from "axios";
+import { API_BASE_URL } from "../config/api";
 import { loginStudent } from "../services/studentService";
 import { useStudentAuth } from "../context/StudentAuthContext";
 import Logo from "../assets/java-gurukul-logo.png"; // Tumhara logo path
@@ -40,7 +41,7 @@ const Home = () => {
   const handleLaunchDemoAdmin = async () => {
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/auth/admin-login",
+        `${API_BASE_URL}/api/auth/admin-login`,
         DEMO_ADMIN
       );
 

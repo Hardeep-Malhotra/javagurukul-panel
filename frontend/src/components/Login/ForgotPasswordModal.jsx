@@ -2,7 +2,7 @@
 import { useState, useRef } from "react";
 import { Modal, Form, Input, Button, message, Steps } from "antd";
 import axios from "axios";
-
+import { API_BASE_URL } from "../../config/api";
 const ForgotPasswordModal = ({ visible, onClose }) => {
   const [currentStep, setCurrentStep] = useState(0); // 0: Email, 1: OTP, 2: New Password
   const [loading, setLoading] = useState(false);
@@ -17,7 +17,7 @@ const ForgotPasswordModal = ({ visible, onClose }) => {
     setLoading(true);
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/auth/forgot-password/send-otp",
+      `${API_BASE_URL}/api/auth/forgot-password/send-otp`,
         { email: values.email },
       );
       message.success(response.data.message || "OTP sent to your email!");
@@ -35,7 +35,7 @@ const ForgotPasswordModal = ({ visible, onClose }) => {
     setLoading(true);
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/auth/forgot-password/verify-otp",
+        `${API_BASE_URL}/api/auth/forgot-password/verify-otp`,
         {
           email: email,
           otp: values.otp,
@@ -61,7 +61,7 @@ const ForgotPasswordModal = ({ visible, onClose }) => {
     try {
       // Direct otpRef.current bhej rahe hain jo bina kisi state delay ke solid data dega
       const response = await axios.post(
-        "http://localhost:5000/api/auth/forgot-password/reset",
+        `${API_BASE_URL}/api/auth/forgot-password/reset`,
         {
           email: email,
           otp: otpRef.current,

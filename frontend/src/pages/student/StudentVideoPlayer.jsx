@@ -6,7 +6,7 @@ import { getVideoAccess } from "../../services/studentService";
 import YouTube from "react-youtube"; // 🌟 React Youtube plugin wrapper for onEnd event
 import { Modal, message } from "antd";
 import axios from "axios";
-
+import { API_BASE_URL } from "../../config/api";
 const StudentVideoPlayer = () => {
   const { videoId } = useParams();
   const navigate = useNavigate();
@@ -34,7 +34,7 @@ const StudentVideoPlayer = () => {
 
         // 2. Playlist ke liye usi batch ki baaki saari videos bhi fetch kar lo
         const batchRes = await axios.get(
-          `http://localhost:5000/api/students/my-batch-videos/${student.batch}`,
+         `${API_BASE_URL}/api/students/my-batch-videos/${student.batch}`,
           { withCredentials: true },
         );
         if (batchRes.data.success) {
@@ -63,7 +63,7 @@ const StudentVideoPlayer = () => {
 
   try {
     const response = await axios.get(
-      `http://localhost:5000/api/notes/${currentVideo.youtubeVideoId}`
+     `${API_BASE_URL}/api/notes/${currentVideo.youtubeVideoId}`
     );
 
     if (
@@ -111,41 +111,6 @@ const StudentVideoPlayer = () => {
   }
 };
 
-  // 🌟 NAYA FUNCTION: Jo backend par generation api ko hit karega aur user ko batayega
-  // const triggerGenerationAndShowModal = async () => {
-  //   try {
-  //     // Apne backend ke generate route ke mutabik is URL ko sahi kar lena (e.g., /api/notes/generate)
-  //     await axios.post(`/api/notes/generate`, {
-  //       videoId: currentVideo.youtubeVideoId,
-  //       title: currentVideo.title,
-  //     });
-
-  //     message.success("AI Generation started in the background!");
-  //   } catch (err) {
-  //     console.error("Failed to trigger AI generation", err);
-  //   }
-
-  //   // Modal toh dikhao hi dikhao taaki user wait kare
-  //   Modal.info({
-  //     title: (
-  //       <span className="text-[#14212a] font-black text-lg">
-  //         ⏳ AI Notes are being prepared
-  //       </span>
-  //     ),
-  //     centered: true,
-  //     content: (
-  //       <p className="font-semibold text-gray-500 mt-2">
-  //         We have triggered the AI engine to generate notes for{" "}
-  //         <strong>"{currentVideo.title}"</strong>. Please check the AI Notes
-  //         repository section in a few moments.
-  //       </p>
-  //     ),
-  //     okText: "Got It",
-  //     okButtonProps: {
-  //       style: { backgroundColor: "#fb991d", borderColor: "#fb991d" },
-  //     },
-  //   });
-  // };
 
   if (loading) {
     return (
