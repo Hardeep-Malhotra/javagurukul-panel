@@ -1,41 +1,90 @@
+// const sendEmail = require("./sendEmail");
+// const { temporaryOTPStore } = require("../controllers/auth/otpStore");
+// const getOTPTemplate = require("./emailTemplates/otpEmailTemplate");
+
+// /**
+//  * Generic OTP Generator and Sender Service (HTML Layout Supported)
+//  * @param {String} email - User's email address
+//  * @param {Object} sessionData - Data to store in memory (userId, role, etc.)
+//  * @param {String} subject - Custom Email Subject
+//  * @param {String} title - Heading inside HTML template
+//  * @param {String} description - Message body inside HTML template
+//  */
+// const sendOTPService = async (
+//   email,
+//   sessionData,
+//   subject,
+//   title,
+//   description,
+// ) => {
+//   // 1. 6 Digit Random OTP Generate
+//   const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+//   // 2. Temporary Store mein data save (5 minutes expiry)
+//   temporaryOTPStore[email] = {
+//     otp: otp,
+//     ...sessionData,
+//     expiresAt: Date.now() + 5 * 60 * 1000,
+//   };
+
+//   // 3. HTML Layout Generate
+//   const htmlContent = getOTPTemplate(otp, title, description);
+
+//   // 4. Global Mail Helper ko call
+//   await sendEmail({
+//     to: email,
+//     subject: subject,
+//     html: htmlContent,
+//   });
+
+//   return true;
+// };
+
+// module.exports = sendOTPService;
 const sendEmail = require("./sendEmail");
 const { temporaryOTPStore } = require("../controllers/auth/otpStore");
 const getOTPTemplate = require("./emailTemplates/otpEmailTemplate");
 
-/**
- * Generic OTP Generator and Sender Service (HTML Layout Supported)
- * @param {String} email - User's email address
- * @param {Object} sessionData - Data to store in memory (userId, role, etc.)
- * @param {String} subject - Custom Email Subject
- * @param {String} title - Heading inside HTML template
- * @param {String} description - Message body inside HTML template
- */
 const sendOTPService = async (
   email,
   sessionData,
   subject,
   title,
-  description,
+  description
 ) => {
-  // 1. 6 Digit Random OTP Generate
-  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  console.log("========== OTP SERVICE START ==========");
 
-  // 2. Temporary Store mein data save (5 minutes expiry)
+  const otp = Math.floor(
+    100000 + Math.random() * 900000
+  ).toString();
+
+  console.log("OTP Generated:", otp);
+
   temporaryOTPStore[email] = {
-    otp: otp,
+    otp,
     ...sessionData,
     expiresAt: Date.now() + 5 * 60 * 1000,
   };
 
-  // 3. HTML Layout Generate
-  const htmlContent = getOTPTemplate(otp, title, description);
+  const htmlContent = getOTPTemplate(
+    otp,
+    title,
+    description
+  );
 
-  // 4. Global Mail Helper ko call
-  await sendEmail({
+  const result = await sendEmail({
     to: email,
-    subject: subject,
+    subject,
     html: htmlContent,
   });
+
+  console.log("sendEmail Result:", result);
+
+  if (!result.success) {
+    throw new Error(
+      result.error || "OTP email failed"
+    );
+  }
 
   return true;
 };

@@ -36,7 +36,12 @@ const nodemailer = require("nodemailer");
 const dns = require("node:dns");
 require("dotenv").config();
 
+// Force IPv4
 dns.setDefaultResultOrder("ipv4first");
+
+// ==========================================
+// SMTP TRANSPORTER
+// ==========================================
 
 const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
@@ -57,30 +62,45 @@ const transporter = nodemailer.createTransport({
   connectionTimeout: 10000,
 });
 
+// ==========================================
+// SEND EMAIL
+// ==========================================
+
 const sendEmail = async ({ to, subject, text, html }) => {
+  console.log("========== EMAIL DEBUG START ==========");
+
+  console.log("EMAIL_USER:", process.env.EMAIL_USER);
+  console.log("EMAIL_PASS EXISTS:", !!process.env.EMAIL_PASS);
+  console.log("TO:", to);
+  console.log("SUBJECT:", subject);
+
   try {
-    const mailOptions = {
+    console.log("📡 Attempting SMTP connection...");
+
+    const info = await transporter.sendMail({
       from: `JavaGurukul Core System <${process.env.EMAIL_USER}>`,
       to,
       subject,
       text,
       html,
-    };
+    });
 
-    const info = await transporter.sendMail(mailOptions);
+    console.log("✅ EMAIL SENT SUCCESSFULLY");
+    console.log("Message ID:", info.messageId);
 
-    console.log(
-      `Email Sent Successfully! Message ID: ${info.messageId}`
-    );
+    console.log("========== EMAIL DEBUG END ==========");
 
     return {
       success: true,
     };
   } catch (error) {
-    console.error(
-      "Nodemailer Global Error:",
-      error.message
-    );
+    console.error("❌ NODEMAILER ERROR");
+    console.error("Message:", error.message);
+    console.error("Code:", error.code);
+    console.error("Command:", error.command);
+    console.error("Full Error:", error);
+
+    console.log("========== EMAIL DEBUG END ==========");
 
     return {
       success: false,
