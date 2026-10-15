@@ -295,19 +295,38 @@ const App = () => {
         {/* Admin Routes */}
         {/* ========================= */}
 
-        <Route element={<ProtectedRoute />}>
-          <Route element={<AdminLayout />}>
-            <Route path="/admin/dashboard" element={<Dashboard />} />
 
-            <Route path="/admin/students" element={<StudentManagement />} />
 
-            <Route path="/admin/batches" element={<BatchManagement />} />
+{/* Admin Routes */}
+<Route element={<ProtectedRoute />}>
+  <Route element={<AdminLayout />}>
+    <Route
+      path="/admin/dashboard"
+      element={<Dashboard />}
+    />
 
-            <Route path="/admin/videos" element={<VideoManagement />} />
+    <Route
+      path="/admin/students"
+      element={<StudentManagement />}
+    />
 
-            <Route path="/admin/meetings" element={<MeetingManagement />} />
-          </Route>
-        </Route>
+    <Route
+      path="/admin/batches"
+      element={<BatchManagement />}
+    />
+
+    <Route
+      path="/admin/videos"
+      element={<VideoManagement />}
+    />
+
+    {/* Meeting Management Route */}
+    <Route
+      path="/admin/meetings"
+      element={<MeetingManagement />}
+    />
+  </Route>
+</Route>
 
         {/* ========================= */}
         {/* Student Routes */}
